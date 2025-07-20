@@ -1,98 +1,581 @@
+# Trip-Mate Backend ✈️
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <img src="https://raw.githubusercontent.com/KBLReddy/trip-mate-backend/main/logo.png" alt="Trip-Mate Logo" width="200"/>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  <strong>The definitive backend solution for collaborative trip planning.</strong>
+  <br />
+  Built with NestJS, Prisma, and PostgreSQL.
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+<p align="center">
+    <a href="https://nestjs.com/" target="_blank"><img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS"></a>
+    <a href="https://www.prisma.io/" target="_blank"><img src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma"></a>
+    <a href="https://www.postgresql.org/" target="_blank"><img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"></a>
+    <a href="https://www.typescriptlang.org/" target="_blank"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"></a>
+</p>
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Welcome to the Trip-Mate backend repository! This project provides a robust, scalable, and secure API for the Trip-Mate application, a platform designed to make planning group trips seamless and enjoyable. This document will guide you through every aspect of the project, making it a cake walk to get started, regardless of your experience with NestJS.
 
-## Project setup
+---
 
-```bash
-$ npm install
+## 📋 Table of Contents
+
+-   [✨ Core Features](#-core-features)
+-   [🛠️ Tech Stack](#️-tech-stack)
+-   [📁 Project Structure](#-project-structure)
+-   [🚀 Getting Started](#-getting-started)
+    -   [Prerequisites](#prerequisites)
+    -   [Installation & Setup](#installation--setup)
+    -   [Running the Application](#running-the-application)
+-   [🔐 API Authentication Flow](#-api-authentication-flow)
+-   [📚 API Endpoint Documentation](#-api-endpoint-documentation)
+    -   [Auth Module (`/auth`)](#auth-module-auth)
+    -   [Users Module (`/users`)](#users-module-users)
+    -   [Trips Module (`/trips`)](#trips-module-trips)
+-   [🤝 Contributing](#-contributing)
+-   [📜 License](#-license)
+
+---
+
+## ✨ Core Features
+
+-   **Secure User Management**: JWT-based authentication for user registration and login.
+-   **Collaborative Trip Planning**: Create trips and invite friends to plan together.
+-   **Itinerary Management**: Add and organize destinations within a trip.
+-   **Activity Scheduling**: Plan activities for each destination with dates and details.
+-   **Shared Expense Tracking**: Log expenses, categorize them, and manage the trip budget transparently.
+-   **Data Validation**: Robust request validation using `class-validator` to ensure data integrity.
+-   **Scalable Architecture**: Modular design powered by NestJS for easy maintenance and extension.
+
+---
+
+## 🛠️ Tech Stack
+
+-   **Framework**: [NestJS](https://nestjs.com/) - A progressive Node.js framework for building efficient and scalable server-side applications.
+-   **Language**: [TypeScript](https://www.typescriptlang.org/) - Typed superset of JavaScript that compiles to plain JavaScript.
+-   **ORM**: [Prisma](https://www.prisma.io/) - Next-generation Node.js and TypeScript ORM for type-safe database access.
+-   **Database**: [PostgreSQL](https://www.postgresql.org/) - A powerful, open-source object-relational database system.
+-   **Authentication**: [Passport.js](http://www.passportjs.org/) with JWT Strategy for secure, stateless authentication.
+-   **Validation**: [class-validator](https://github.com/typestack/class-validator) & [class-transformer](https://github.com/typestack/class-transformer) for validating incoming request bodies.
+
+---
+
+## 📁 Project Structure
+
+The project follows a standard modular architecture. Understanding the structure is key to understanding the application's flow.
+
+```
+.
+├── prisma/
+│   ├── migrations/         # Contains SQL migration files generated by Prisma.
+│   └── schema.prisma       # The single source of truth for your database schema and models.
+│
+├── src/
+│   ├── auth/               # Handles all authentication logic (login, register).
+│   │   ├── dto/            # Data Transfer Objects defining the shape of auth-related request bodies.
+│   │   ├── guards/         # Route guards, like `JwtAuthGuard` to protect endpoints.
+│   │   ├── auth.controller.ts # Defines the `/auth` API routes.
+│   │   ├── auth.service.ts   # Contains the business logic for authentication.
+│   │   └── jwt.strategy.ts # Implements the logic to validate JWTs.
+│   │
+│   ├── users/              # Manages user-related operations (e.g., fetching profiles).
+│   │   ├── users.controller.ts # Defines the `/users` API routes.
+│   │   └── users.service.ts    # Business logic for user operations.
+│   │
+│   ├── trips/              # The core module for all trip-related functionality.
+│   │   ├── dto/            # DTOs for trips, destinations, activities, and expenses.
+│   │   ├── trips.controller.ts # Defines all `/trips` routes and sub-routes.
+│   │   └── trips.service.ts    # Contains all business logic for managing trips and their related entities.
+│   │
+│   ├── common/             # Shared utilities.
+│   │   └── decorators/     # Custom decorators (e.g., `@GetUser` to inject user object into requests).
+│   │
+│   ├── app.module.ts       # The root module that ties all other modules together.
+│   └── main.ts             # The application's entry point. It creates and starts the NestJS app.
+│
+├── .env.example            # Template for your environment variables.
+├── package.json            # Lists project dependencies and scripts.
+└── tsconfig.json           # Configuration for the TypeScript compiler.
 ```
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+## 🚀 Getting Started
 
-# watch mode
-$ npm run start:dev
+Follow these steps to get a local copy of the project up and running.
 
-# production mode
-$ npm run start:prod
+### Prerequisites
+
+-   [Node.js](https://nodejs.org/en/) (v16 or newer)
+-   [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
+-   [Git](https://git-scm.com/)
+-   [PostgreSQL](https://www.postgresql.org/download/) server running locally.
+    -   *Alternative*: [Docker](https://www.docker.com/products/docker-desktop/) for a containerized database setup.
+
+### Installation & Setup
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/KBLReddy/trip-mate-backend.git
+    cd trip-mate-backend
+    ```
+
+2.  **Install Dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment Variables**
+    Create a `.env` file in the root directory by copying the example file.
+    ```bash
+    cp .env.example .env
+    ```
+    Open the `.env` file and set the following variables:
+    ```env
+    # --- Database Configuration ---
+    # Your PostgreSQL connection string.
+    # Format: postgresql://USER:PASSWORD@HOST:PORT/DATABASE_NAME
+    DATABASE_URL="postgresql://postgres:mysecretpassword@localhost:5432/trip_mate"
+
+    # --- Security Configuration ---
+    # A strong, unique secret for signing JSON Web Tokens (JWTs).
+    # You can generate one here: https://www.lastpass.com/features/password-generator
+    JWT_SECRET="YOUR_SUPER_SECRET_AND_LONG_JWT_KEY"
+    ```
+    > **Important**: Ensure you have a PostgreSQL database created that matches the `DATABASE_NAME` in your `DATABASE_URL`.
+
+4.  **Apply Database Migrations**
+    This command reads your `prisma/schema.prisma` file and creates or updates the database tables accordingly.
+    ```bash
+    npx prisma migrate dev
+    ```
+    This will also generate the Prisma Client, a type-safe query builder for your database.
+
+### Running the Application
+
+-   **Development Mode**
+    This command starts the server with hot-reloading, which automatically restarts the server when you save a file.
+    ```bash
+    npm run start:dev
+    ```
+    The API will be available at `http://localhost:3000`.
+
+-   **Production Mode**
+    To build and run the application for production:
+    ```bash
+    npm run build
+    npm run start:prod
+    ```
+
+---
+
+## 🔐 API Authentication Flow
+
+The API is secured using JSON Web Tokens (JWT). All protected endpoints require a valid token.
+
+1.  **Register or Login**: A new user signs up via `/auth/register` or an existing user signs in via `/auth/login`.
+2.  **Receive Token**: Upon successful authentication, the API returns an `access_token`.
+3.  **Authorize Requests**: For every subsequent request to a protected endpoint, you must include the `Authorization` header.
+
+**Header Format**:
 ```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+Authorization: Bearer <your_access_token>
 ```
+Endpoints that require this header are marked with a 🔒 emoji in the documentation below.
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 📚 API Endpoint Documentation
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+This section provides a complete reference for all available API endpoints.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+### **Auth Module (`/auth`)**
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Handles user registration and authentication.
 
-## Resources
+#### 1. Register a New User
+-   **Endpoint**: `POST /auth/register`
+-   **Description**: Creates a new user account. The email must be unique.
+-   **Authentication**: 🔓 Public
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "email": "jane.doe@example.com",
+      "password": "a-very-strong-password-123!",
+      "name": "Jane Doe"
+    }
+    ```
+    *   `email` (string, required, valid email format)
+    *   `password` (string, required, min 8 characters)
+    *   `name` (string, required)
 
-Check out a few resources that may come in handy when working with NestJS:
+-   **Success Response (201 Created)**:
+    ```json
+    {
+        "id": "clxza1b2c3d4e5f6",
+        "email": "jane.doe@example.com",
+        "name": "Jane Doe"
+    }
+    ```
+-   **Error Response (400 Bad Request)**: If validation fails or email is already taken.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+#### 2. Login
+-   **Endpoint**: `POST /auth/login`
+-   **Description**: Authenticates a user with their email and password.
+-   **Authentication**: 🔓 Public
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "email": "jane.doe@example.com",
+      "password": "a-very-strong-password-123!"
+    }
+    ```
+-   **Success Response (200 OK)**:
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+-   **Error Response (401 Unauthorized)**: If credentials are invalid.
 
-## Support
+### **Users Module (`/users`)**
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Handles user-specific data.
 
-## Stay in touch
+#### 1. Get Current User Profile
+-   **Endpoint**: `GET /users/me`
+-   **Description**: Retrieves the profile information of the currently authenticated user.
+-   **Authentication**: 🔒 Protected
+-   **Success Response (200 OK)**:
+    ```json
+    {
+        "id": "clxza1b2c3d4e5f6",
+        "email": "jane.doe@example.com",
+        "name": "Jane Doe"
+    }
+    ```
+-   **Error Response (401 Unauthorized)**: If the token is missing or invalid.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### **Trips Module (`/trips`)**
 
-## License
+The core module for managing trips and all related data.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### 1. Create a New Trip
+-   **Endpoint**: `POST /trips`
+-   **Description**: Creates a new trip. The user making the request automatically becomes the owner and a member of the trip.
+-   **Authentication**: 🔒 Protected
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "name": "Summer Trip to Japan",
+      "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
+      "startDate": "2024-07-20T00:00:00.000Z",
+      "endDate": "2024-07-30T00:00:00.000Z"
+    }
+    ```
+    *   `startDate` & `endDate` must be in ISO 8601 format.
+
+-   **Success Response (201 Created)**:
+    ```json
+    {
+        "id": "trip_abc123",
+        "name": "Summer Trip to Japan",
+        "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
+        "startDate": "2024-07-20T00:00:00.000Z",
+        "endDate": "2024-07-30T00:00:00.000Z",
+        "ownerId": "user_xyz789",
+        "createdAt": "...",
+        "updatedAt": "..."
+    }
+    ```
+
+#### 2. Get All User's Trips
+-   **Endpoint**: `GET /trips`
+-   **Description**: Retrieves a list of all trips that the authenticated user is a member of.
+-   **Authentication**: 🔒 Protected
+-   **Success Response (200 OK)**: An array of trip objects.
+    ```json
+    [
+        {
+            "id": "trip_abc123",
+            "name": "Summer Trip to Japan",
+            "description": "...",
+            "startDate": "...",
+            "endDate": "...",
+            "ownerId": "user_xyz789"
+        }
+    ]
+    ```
+
+#### 3. Get a Single Trip by ID
+-   **Endpoint**: `GET /trips/:id`
+-   **Description**: Fetches all details for a specific trip, including members, destinations, activities, and expenses. The user must be a member of the trip to view it.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The unique identifier of the trip.
+-   **Success Response (200 OK)**:
+    ```json
+    {
+        "id": "trip_abc123",
+        "name": "Summer Trip to Japan",
+        "description": "...",
+        "members": [
+            { "user": { "id": "user_xyz789", "name": "Jane Doe", "email": "jane.doe@example.com" } }
+        ],
+        "destinations": [ /* ... */ ],
+        "activities": [ /* ... */ ],
+        "expenses": [ /* ... */ ]
+    }
+    ```
+-   **Error Response (404 Not Found)**: If the trip does not exist or the user is not a member.
+
+#### 4. Update a Trip
+-   **Endpoint**: `PUT /trips/:id`
+-   **Description**: Updates a trip's details. Only the trip's owner can perform this action.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The ID of the trip to update.
+-   **Request Body**: `application/json` (fields are optional)
+    ```json
+    {
+      "name": "An Epic Summer Trip to Japan",
+      "description": "Updated description with more details."
+    }
+    ```
+-   **Success Response (200 OK)**: The updated trip object.
+-   **Error Response (403 Forbidden)**: If the user is not the owner of the trip.
+
+#### 5. Delete a Trip
+-   **Endpoint**: `DELETE /trips/:id`
+-   **Description**: Deletes a trip and all its associated data (members, destinations, etc.). Only the trip's owner can perform this action.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The ID of the trip to delete.
+-   **Success Response (204 No Content)**: An empty response body.
+-   **Error Response (403 Forbidden)**: If the user is not the owner.
+
+#### 6. Add a Member to a Trip
+-   **Endpoint**: `POST /trips/:id/members`
+-   **Description**: Adds another registered user to the trip as a member. Only existing trip members can add new members.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The ID of the trip.
+-   **Request Body**:
+    ```json
+    {
+      "email": "friend@example.com"
+    }
+    ```
+-   **Success Response (201 Created)**: The full trip object with the updated member list.
+-   **Error Response (404 Not Found)**: If the user with the given email does not exist or the trip doesn't exist.
+
+#### 7. Remove a Member from a Trip
+-   **Endpoint**: `DELETE /trips/:id/members/:userId`
+-   **Description**: Removes a member from a trip. Only the trip owner can remove members. The owner cannot remove themselves.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The ID of the trip.
+    *   `userId` (string): The ID of the user to remove.
+-   **Success Response (200 OK)**: The full trip object with the updated member list.
+-   **Error Response (403 Forbidden)**: If the user making the request is not the trip owner.
+-   **Error Response (400 Bad Request)**: If trying to remove the owner of the trip.
+
+---
+
+### **Destinations Sub-Module (`/trips/:id/destinations`)**
+
+Manage the places you'll visit on your trip.
+
+#### 8. Add a Destination to a Trip
+-   **Endpoint**: `POST /trips/:id/destinations`
+-   **Description**: Adds a new destination to the trip's itinerary. Only members of the trip can add destinations.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The ID of the trip.
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "name": "Kyoto",
+      "country": "Japan",
+      "arrivalDate": "2024-07-25T00:00:00.000Z",
+      "departureDate": "2024-07-28T00:00:00.000Z"
+    }
+    ```
+-   **Success Response (201 Created)**: The newly created destination object.
+    ```json
+    {
+        "id": "dest_def456",
+        "name": "Kyoto",
+        "country": "Japan",
+        "arrivalDate": "2024-07-25T00:00:00.000Z",
+        "departureDate": "2024-07-28T00:00:00.000Z",
+        "tripId": "trip_abc123"
+    }
+    ```
+
+#### 9. Update a Destination
+-   **Endpoint**: `PUT /trips/:tripId/destinations/:destinationId`
+-   **Description**: Updates the details of a destination. Only trip members can update.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `destinationId` (string): The ID of the destination to update.
+-   **Request Body**: `application/json` (fields are optional)
+    ```json
+    {
+      "name": "Kyoto (Ancient Capital)"
+    }
+    ```
+-   **Success Response (200 OK)**: The updated destination object.
+
+#### 10. Delete a Destination
+-   **Endpoint**: `DELETE /trips/:tripId/destinations/:destinationId`
+-   **Description**: Deletes a destination from a trip. Only trip members can delete.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `destinationId` (string): The ID of the destination to delete.
+-   **Success Response (204 No Content)**: An empty response body.
+
+---
+
+### **Activities Sub-Module (`/trips/.../activities`)**
+
+Manage the activities you'll do at each destination.
+
+#### 11. Add an Activity to a Destination
+-   **Endpoint**: `POST /trips/:tripId/destinations/:destinationId/activities`
+-   **Description**: Adds a new activity to a specific destination within a trip. Only trip members can add activities.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `destinationId` (string): The ID of the destination for this activity.
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "name": "Visit Fushimi Inari Shrine",
+      "date": "2024-07-26T09:00:00.000Z",
+      "description": "Hike through the thousands of torii gates."
+    }
+    ```
+-   **Success Response (201 Created)**: The newly created activity object.
+    ```json
+    {
+        "id": "act_ghi789",
+        "name": "Visit Fushimi Inari Shrine",
+        "date": "2024-07-26T09:00:00.000Z",
+        "description": "Hike through the thousands of torii gates.",
+        "destinationId": "dest_def456"
+    }
+    ```
+
+#### 12. Update an Activity
+-   **Endpoint**: `PUT /trips/:tripId/activities/:activityId`
+-   **Description**: Updates the details of an activity. Only trip members can update.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `activityId` (string): The ID of the activity to update.
+-   **Request Body**: `application/json` (fields are optional)
+    ```json
+    {
+      "description": "Early morning hike to avoid the crowds."
+    }
+    ```
+-   **Success Response (200 OK)**: The updated activity object.
+
+#### 13. Delete an Activity
+-   **Endpoint**: `DELETE /trips/:tripId/activities/:activityId`
+-   **Description**: Deletes an activity from a trip. Only trip members can delete.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `activityId` (string): The ID of the activity to delete.
+-   **Success Response (204 No Content)**: An empty response body.
+
+---
+
+### **Expenses Sub-Module (`/trips/:id/expenses`)**
+
+Manage and track shared expenses for a trip.
+
+#### 14. Add an Expense to a Trip
+-   **Endpoint**: `POST /trips/:id/expenses`
+-   **Description**: Logs a new expense for the trip. The user making the request is automatically assigned as the `paidById`. Only trip members can add expenses.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `id` (string): The ID of the trip.
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "description": "Shinkansen Tickets (Tokyo to Kyoto)",
+      "amount": 130.50,
+      "category": "TRANSPORTATION"
+    }
+    ```
+    *   `category` must be one of the following: `FOOD`, `TRANSPORTATION`, `ACCOMMODATION`, `ACTIVITIES`, `OTHER`.
+
+-   **Success Response (201 Created)**: The newly created expense object.
+    ```json
+    {
+        "id": "exp_jkl012",
+        "description": "Shinkansen Tickets (Tokyo to Kyoto)",
+        "amount": 130.5,
+        "category": "TRANSPORTATION",
+        "date": "2023-10-27T10:00:00.000Z",
+        "tripId": "trip_abc123",
+        "paidById": "user_xyz789"
+    }
+    ```
+
+#### 15. Update an Expense
+-   **Endpoint**: `PUT /trips/:tripId/expenses/:expenseId`
+-   **Description**: Updates the details of an expense. Only the user who originally added the expense can update it.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `expenseId` (string): The ID of the expense to update.
+-   **Request Body**: `application/json` (fields are optional)
+    ```json
+    {
+      "amount": 135.00
+    }
+    ```
+-   **Success Response (200 OK)**: The updated expense object.
+-   **Error Response (403 Forbidden)**: If the user is not the one who paid for the expense.
+
+#### 16. Delete an Expense
+-   **Endpoint**: `DELETE /trips/:tripId/expenses/:expenseId`
+-   **Description**: Deletes an expense from a trip. Only the user who added the expense can delete it.
+-   **Authentication**: 🔒 Protected
+-   **Path Parameters**:
+    *   `tripId` (string): The ID of the trip.
+    *   `expenseId` (string): The ID of the expense to delete.
+-   **Success Response (204 No Content)**: An empty response body.
+-   **Error Response (403 Forbidden)**: If the user is not the one who paid for the expense.
+
+---
+
+## 🤝 Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+---
+
+## 📜 License
+
+This project is distributed under the MIT License. See `LICENSE` for more information.
+
+---
+Happy Travels and Happy Coding!
