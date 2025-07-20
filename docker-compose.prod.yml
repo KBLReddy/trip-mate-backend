@@ -1,0 +1,39 @@
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: tripmate_api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://tripmate_user:tripmate_password@postgres:5432/tripmate_db?schema=public"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+    depends_on:
+      - postgres
+    networks:
+      - tripmate-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: tripmate_postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tripmate_user
+      POSTGRES_PASSWORD: tripmate_password
+      POSTGRES_DB: tripmate_db
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - tripmate-network
+
+networks:
+  tripmate-network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
