@@ -34,7 +34,11 @@ export class PostQueryDto {
   @Min(1)
   limit?: number = 10;
 
-  @ApiProperty({ required: false, enum: PostSortBy, default: PostSortBy.CREATED_AT })
+  @ApiProperty({
+    required: false,
+    enum: PostSortBy,
+    default: PostSortBy.CREATED_AT,
+  })
   @IsEnum(PostSortBy)
   @IsOptional()
   sortBy?: PostSortBy = PostSortBy.CREATED_AT;

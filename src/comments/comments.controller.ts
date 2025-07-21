@@ -35,7 +35,11 @@ export class CommentsController {
   @Post('posts/:postId/comments')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add a comment to a post' })
-  @ApiResponse({ status: 201, description: 'Comment created successfully', type: CommentResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Comment created successfully',
+    type: CommentResponseDto,
+  })
   async create(
     @Param('postId') postId: string,
     @Body() createCommentDto: CreateCommentDto,

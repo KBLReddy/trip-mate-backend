@@ -12,11 +12,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private configService: ConfigService,
     private usersService: UsersService,
   ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret) throw new Error('JWT_SECRET is not set');
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET'),
-    } as any); // Type assertion to fix the type issue
+      secretOrKey: secret,
+    });
   }
 
   async validate(payload: JwtPayload) {

@@ -1,5 +1,9 @@
 // src/comments/comments.service.ts
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentResponseDto } from './dto/comment-response.dto';
@@ -82,7 +86,7 @@ export class CommentsService {
     ]);
 
     return {
-      data: comments.map(comment => new CommentResponseDto(comment)),
+      data: comments.map((comment) => new CommentResponseDto(comment)),
       total,
       page,
       limit,
@@ -90,7 +94,11 @@ export class CommentsService {
     };
   }
 
-  async remove(commentId: string, userId: string, userRole: string): Promise<void> {
+  async remove(
+    commentId: string,
+    userId: string,
+    userRole: string,
+  ): Promise<void> {
     const comment = await this.prisma.comment.findUnique({
       where: { id: commentId },
     });

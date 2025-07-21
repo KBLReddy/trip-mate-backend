@@ -11,9 +11,9 @@ export class NotificationStatsDto {
   @ApiProperty()
   read: number;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Count by notification type',
-    example: { BOOKING_CONFIRMED: 5, POST_LIKED: 10 } 
+    example: { BOOKING_CONFIRMED: 5, POST_LIKED: 10 },
   })
   byType: Record<string, number>;
 }

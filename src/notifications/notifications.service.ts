@@ -1,5 +1,9 @@
 // src/notifications/notifications.service.ts
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationQueryDto } from './dto/notification-query.dto';
 import { NotificationResponseDto } from './dto/notification-response.dto';
@@ -41,7 +45,7 @@ export class NotificationsService {
     ]);
 
     return {
-      data: notifications.map(notification => ({
+      data: notifications.map((notification) => ({
         id: notification.id,
         userId: notification.userId,
         type: notification.type,
@@ -85,7 +89,10 @@ export class NotificationsService {
     };
   }
 
-  async markAsRead(userId: string, markReadDto: MarkReadDto): Promise<{ updated: number }> {
+  async markAsRead(
+    userId: string,
+    markReadDto: MarkReadDto,
+  ): Promise<{ updated: number }> {
     const { notificationIds } = markReadDto;
 
     if (notificationIds && notificationIds.length > 0) {
@@ -118,7 +125,10 @@ export class NotificationsService {
     }
   }
 
-  async markAsUnread(id: string, userId: string): Promise<NotificationResponseDto> {
+  async markAsUnread(
+    id: string,
+    userId: string,
+  ): Promise<NotificationResponseDto> {
     const notification = await this.prisma.notification.findUnique({
       where: { id },
     });
@@ -128,7 +138,9 @@ export class NotificationsService {
     }
 
     if (notification.userId !== userId) {
-      throw new ForbiddenException('You can only update your own notifications');
+      throw new ForbiddenException(
+        'You can only update your own notifications',
+      );
     }
 
     const updated = await this.prisma.notification.update({
@@ -158,7 +170,9 @@ export class NotificationsService {
     }
 
     if (notification.userId !== userId) {
-      throw new ForbiddenException('You can only delete your own notifications');
+      throw new ForbiddenException(
+        'You can only delete your own notifications',
+      );
     }
 
     await this.prisma.notification.delete({
@@ -189,10 +203,13 @@ export class NotificationsService {
       }),
     ]);
 
-    const byTypeMap = byType.reduce((acc, curr) => {
-      acc[curr.type] = curr._count;
-      return acc;
-    }, {} as Record<string, number>);
+    const byTypeMap = byType.reduce(
+      (acc, curr) => {
+        acc[curr.type] = curr._count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       total,

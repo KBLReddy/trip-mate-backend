@@ -6,11 +6,9 @@ import { PrismaService } from './prisma/prisma.service';
 @ApiTags('health')
 @Controller()
 export class AppController {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  @Get()
+  @Get('info')
   @ApiOperation({ summary: 'API root endpoint' })
   @ApiResponse({ status: 200, description: 'API information' })
   getHello() {
@@ -29,7 +27,7 @@ export class AppController {
     try {
       // Check database connection
       await this.prisma.$queryRaw`SELECT 1`;
-      
+
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -38,7 +36,7 @@ export class AppController {
           database: 'up',
         },
       };
-    } catch (error) {
+    } catch {
       return {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),

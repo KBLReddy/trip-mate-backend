@@ -25,11 +25,18 @@ describe('PostsController (e2e)', () => {
   });
 
   describe('/posts (GET)', () => {
-    it('should return 200 for public access', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/posts');
-      expect([200, 404]).toContain(res.status); // 200 if posts exist, 404 if not
-    });
-    // TODO: Add test for pagination, filtering, etc.
+  it('should return 200 for public access', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/posts');
+    
+    // Add debugging to see the actual error
+    if (res.status === 500) {
+      console.error('Status:', res.status);
+      console.error('Body:', res.body);
+      console.error('Error:', res.error);
+    }
+    
+    expect([200, 404]).toContain(res.status);
   });
+});
 }); 

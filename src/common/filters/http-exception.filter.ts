@@ -21,10 +21,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
-      if (typeof exceptionResponse === 'object') {
-        message = (exceptionResponse as any).message || exception.message;
-        error = (exceptionResponse as any).error || 'Error';
+
+      if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
+        const resp = exceptionResponse as { message?: string; error?: string };
+        message = resp.message || exception.message;
+        error = resp.error || 'Error';
       } else {
         message = exception.message;
       }
@@ -32,10 +33,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = exception.message;
     }
 
+    const req = ctx.getRequest<{ url?: string }>();
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: ctx.getRequest().url,
+      path: req.url ?? '',
       error,
       message,
     });

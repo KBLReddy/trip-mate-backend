@@ -45,7 +45,11 @@ export class NotificationsController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get notification statistics' })
-  @ApiResponse({ status: 200, description: 'Notification statistics', type: NotificationStatsDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification statistics',
+    type: NotificationStatsDto,
+  })
   async getStats(@CurrentUser() user: User): Promise<NotificationStatsDto> {
     return this.notificationsService.getStats(user.id);
   }
@@ -60,7 +64,11 @@ export class NotificationsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get notification details' })
-  @ApiResponse({ status: 200, description: 'Notification details', type: NotificationResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification details',
+    type: NotificationResponseDto,
+  })
   async findOne(
     @Param('id') id: string,
     @CurrentUser() user: User,
@@ -83,7 +91,11 @@ export class NotificationsController {
   @Put(':id/unread')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark notification as unread' })
-  @ApiResponse({ status: 200, description: 'Notification marked as unread', type: NotificationResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification marked as unread',
+    type: NotificationResponseDto,
+  })
   async markAsUnread(
     @Param('id') id: string,
     @CurrentUser() user: User,

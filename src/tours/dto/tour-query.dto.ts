@@ -52,7 +52,11 @@ export class TourQueryDto {
   @Min(1)
   limit?: number = 10;
 
-  @ApiProperty({ required: false, enum: ['price', 'startDate', 'createdAt'], default: 'createdAt' })
+  @ApiProperty({
+    required: false,
+    enum: ['price', 'startDate', 'createdAt'],
+    default: 'createdAt',
+  })
   @IsString()
   @IsOptional()
   sortBy?: string = 'createdAt';

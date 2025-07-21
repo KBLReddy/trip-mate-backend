@@ -1,5 +1,9 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,7 +12,6 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { JwtPayload } from '../common/types/jwt-payload.type';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -85,7 +88,10 @@ export class AuthService {
     });
   }
 
-  async refreshTokens(userId: string, refreshToken: string): Promise<AuthResponseDto> {
+  async refreshTokens(
+    userId: string,
+    refreshToken: string,
+  ): Promise<AuthResponseDto> {
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new ForbiddenException('Access Denied');
@@ -155,7 +161,10 @@ export class AuthService {
     };
   }
 
-  private async saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  private async saveRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<void> {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 

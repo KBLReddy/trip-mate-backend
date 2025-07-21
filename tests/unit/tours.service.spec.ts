@@ -50,7 +50,7 @@ describe('ToursService', () => {
         capacity: 10,
         category: 'ADVENTURE',
       };
-      const result = await service.create(dto, 'guide1');
+      const result = await service.create(dto);
       expect(result).toBeDefined();
       expect(mockPrisma.tour.create).toHaveBeenCalled();
     });

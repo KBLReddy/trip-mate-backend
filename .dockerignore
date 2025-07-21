@@ -1,7 +1,8 @@
 node_modules
 dist
 .env
-.env.local
+.env.*
+.envrc
 .git
 .gitignore
 README.md
@@ -23,3 +24,16 @@ API_DOCUMENTATION.md
 *.swp
 *.swo
 *~
+.env.test
+docker-compose.test.yml
+.history
+.cache
+.vscode
+.idea
+.c9
+.eslintcache
+.prettiercache
+*.bak
+.tmp
+.temp
+*.code-workspace

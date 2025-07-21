@@ -1,6 +1,11 @@
 // src/users/users.controller.ts
 import { Controller, Get, Body, Put, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -17,8 +22,12 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile', type: UserResponseDto })
-  async getProfile(@CurrentUser() user: User): Promise<UserResponseDto> {
+  @ApiResponse({
+    status: 200,
+    description: 'User profile',
+    type: UserResponseDto,
+  })
+  getProfile(@CurrentUser() user: User): UserResponseDto {
     return {
       id: user.id,
       email: user.email,
@@ -31,7 +40,11 @@ export class UsersController {
 
   @Put('me')
   @ApiOperation({ summary: 'Update current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile updated', type: UserResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile updated',
+    type: UserResponseDto,
+  })
   async updateProfile(
     @CurrentUser() user: User,
     @Body() updateUserDto: UpdateUserDto,

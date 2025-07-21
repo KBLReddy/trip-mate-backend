@@ -1,9 +1,9 @@
 // src/bookings/bookings.service.ts
-import { 
-  Injectable, 
-  NotFoundException, 
-  BadRequestException, 
-  ForbiddenException 
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -37,11 +37,14 @@ export class BookingsService {
 
     // Check if tour hasn't started yet
     if (tour.startDate <= new Date()) {
-      throw new BadRequestException('Cannot book a tour that has already started');
+      throw new BadRequestException(
+        'Cannot book a tour that has already started',
+      );
     }
 
     // Check availability
-    const availableCapacity = await this.toursService.getAvailableCapacity(tourId);
+    const availableCapacity =
+      await this.toursService.getAvailableCapacity(tourId);
     if (availableCapacity <= 0) {
       throw new BadRequestException('Tour is fully booked');
     }
@@ -94,7 +97,14 @@ export class BookingsService {
   }
 
   async findAll(userId: string, userRole: Role, query: BookingQueryDto) {
-    const { status, paymentStatus, fromDate, toDate, page = 1, limit = 10 } = query;
+    const {
+      status,
+      paymentStatus,
+      fromDate,
+      toDate,
+      page = 1,
+      limit = 10,
+    } = query;
 
     const where: Prisma.BookingWhereInput = {};
 
@@ -144,7 +154,7 @@ export class BookingsService {
     ]);
 
     return {
-      data: bookings.map(booking => this.formatBookingResponse(booking)),
+      data: bookings.map((booking) => this.formatBookingResponse(booking)),
       total,
       page,
       limit,
@@ -171,7 +181,9 @@ export class BookingsService {
 
     // Check if user has permission to view this booking
     if (userRole !== Role.ADMIN && booking.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to view this booking');
+      throw new ForbiddenException(
+        'You do not have permission to view this booking',
+      );
     }
 
     return this.formatBookingResponse(booking);
@@ -196,7 +208,9 @@ export class BookingsService {
 
     // Check permissions
     if (userRole !== Role.ADMIN && booking.userId !== userId) {
-      throw new ForbiddenException('You do not have permission to update this booking');
+      throw new ForbiddenException(
+        'You do not have permission to update this booking',
+      );
     }
 
     // Validate status transitions
@@ -207,7 +221,9 @@ export class BookingsService {
 
       // Check if tour has already started
       if (booking.tour.startDate <= new Date()) {
-        throw new BadRequestException('Cannot cancel a tour that has already started');
+        throw new BadRequestException(
+          'Cannot cancel a tour that has already started',
+        );
       }
     }
 
@@ -241,7 +257,7 @@ export class BookingsService {
   async cancel(id: string, userId: string) {
     return this.updateStatus(
       id,
-      { 
+      {
         status: BookingStatus.CANCELLED,
         paymentStatus: PaymentStatus.REFUNDED,
       },
@@ -254,52 +270,57 @@ export class BookingsService {
     return this.findAll(userId, Role.USER, query);
   }
 
-  async getStatistics(userId: string, userRole: Role): Promise<BookingStatisticsDto> {
+  async getStatistics(
+    userId: string,
+    userRole: Role,
+  ): Promise<BookingStatisticsDto> {
     const where: Prisma.BookingWhereInput = {};
-    
+
     // If not admin, only show user's own statistics
     if (userRole !== Role.ADMIN) {
       where.userId = userId;
     }
 
-    const [
-      totalBookings,
-      statusCounts,
-      paymentCounts,
-      revenueAggregate,
-    ] = await Promise.all([
-      this.prisma.booking.count({ where }),
-      this.prisma.booking.groupBy({
-        by: ['status'],
-        where,
-        _count: true,
-      }),
-      this.prisma.booking.groupBy({
-        by: ['paymentStatus'],
-        where,
-        _count: true,
-      }),
-      this.prisma.booking.aggregate({
-        where: {
-          ...where,
-          paymentStatus: PaymentStatus.PAID,
-        },
-        _sum: {
-          amount: true,
-        },
-      }),
-    ]);
+    const [totalBookings, statusCounts, paymentCounts, revenueAggregate] =
+      await Promise.all([
+        this.prisma.booking.count({ where }),
+        this.prisma.booking.groupBy({
+          by: ['status'],
+          where,
+          _count: true,
+        }),
+        this.prisma.booking.groupBy({
+          by: ['paymentStatus'],
+          where,
+          _count: true,
+        }),
+        this.prisma.booking.aggregate({
+          where: {
+            ...where,
+            paymentStatus: PaymentStatus.PAID,
+          },
+          _sum: {
+            amount: true,
+          },
+        }),
+      ]);
 
     // Convert grouped results to counts
-    const statusCountMap = statusCounts.reduce((acc, curr) => {
-      acc[curr.status] = curr._count;
-      return acc;
-    }, {} as Record<string, number>);
+    const statusCountMap = statusCounts.reduce(
+      (acc, curr) => {
+        acc[curr.status] = curr._count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-    const paymentCountMap = paymentCounts.reduce((acc, curr) => {
-      acc[curr.paymentStatus] = curr._count;
-      return acc;
-    }, {} as Record<string, number>);
+    const paymentCountMap = paymentCounts.reduce(
+      (acc, curr) => {
+        acc[curr.paymentStatus] = curr._count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       totalBookings,
@@ -360,7 +381,11 @@ export class BookingsService {
     return this.formatBookingResponse(updatedBooking);
   }
 
-  private formatBookingResponse(booking: any): BookingResponseDto {
+  private formatBookingResponse(
+    booking: Prisma.BookingGetPayload<{
+      include: { tour: { include: { guide: true } }; user: true };
+    }>,
+  ): BookingResponseDto {
     return {
       id: booking.id,
       userId: booking.userId,
@@ -369,36 +394,42 @@ export class BookingsService {
       status: booking.status,
       paymentStatus: booking.paymentStatus,
       amount: Number(booking.amount),
-      specialRequests: booking.specialRequests,
+      specialRequests: booking.specialRequests ?? undefined,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
-      tour: booking.tour ? {
-        id: booking.tour.id,
-        title: booking.tour.title,
-        description: booking.tour.description,
-        location: booking.tour.location,
-        price: Number(booking.tour.price),
-        startDate: booking.tour.startDate,
-        endDate: booking.tour.endDate,
-        capacity: booking.tour.capacity,
-        imageUrl: booking.tour.imageUrl,
-        category: booking.tour.category,
-        createdAt: booking.tour.createdAt,
-        updatedAt: booking.tour.updatedAt,
-        guide: booking.tour.guide ? {
-          id: booking.tour.guide.id,
-          name: booking.tour.guide.name,
-          email: booking.tour.guide.email,
-        } : null,
-      } : undefined,
-      user: booking.user ? {
-        id: booking.user.id,
-        email: booking.user.email,
-        name: booking.user.name,
-        avatar: booking.user.avatar,
-        role: booking.user.role,
-        createdAt: booking.user.createdAt,
-      } : undefined,
+      tour: booking.tour
+        ? {
+            id: booking.tour.id,
+            title: booking.tour.title,
+            description: booking.tour.description,
+            location: booking.tour.location,
+            price: Number(booking.tour.price),
+            startDate: booking.tour.startDate,
+            endDate: booking.tour.endDate,
+            capacity: booking.tour.capacity,
+            imageUrl: booking.tour.imageUrl,
+            category: booking.tour.category,
+            createdAt: booking.tour.createdAt,
+            updatedAt: booking.tour.updatedAt,
+            guide: booking.tour.guide
+              ? {
+                  id: booking.tour.guide.id,
+                  name: booking.tour.guide.name,
+                  email: booking.tour.guide.email,
+                }
+              : null,
+          }
+        : undefined,
+      user: booking.user
+        ? {
+            id: booking.user.id,
+            email: booking.user.email,
+            name: booking.user.name,
+            avatar: booking.user.avatar,
+            role: booking.user.role,
+            createdAt: booking.user.createdAt,
+          }
+        : undefined,
     };
   }
 }

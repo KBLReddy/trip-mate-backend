@@ -1,6 +1,12 @@
 // src/bookings/dto/booking-query.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsEnum, IsDateString, IsNumber, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 

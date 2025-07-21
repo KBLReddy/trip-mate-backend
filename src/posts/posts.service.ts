@@ -1,9 +1,8 @@
 // src/posts/posts.service.ts
-import { 
-  Injectable, 
-  NotFoundException, 
+import {
+  Injectable,
+  NotFoundException,
   ForbiddenException,
-  BadRequestException 
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -20,7 +19,10 @@ export class PostsService {
     private notificationsService: NotificationsService, // Injected for notification creation
   ) {}
 
-  async create(createPostDto: CreatePostDto, userId: string): Promise<PostResponseDto> {
+  async create(
+    createPostDto: CreatePostDto,
+    userId: string,
+  ): Promise<PostResponseDto> {
     const post = await this.prisma.post.create({
       data: {
         ...createPostDto,
@@ -38,62 +40,79 @@ export class PostsService {
   }
 
   async findAll(query: PostQueryDto, currentUserId?: string) {
-    const { search, userId, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = query;
+    try {
+      const {
+        search,
+        userId,
+        page = 1,
+        limit = 10,
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+      } = query;
 
-    const where: Prisma.PostWhereInput = {};
+      const where: Prisma.PostWhereInput = {};
 
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
-      ];
-    }
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: 'insensitive' } },
+          { content: { contains: search, mode: 'insensitive' } },
+        ];
+      }
 
-    if (userId) {
-      where.userId = userId;
-    }
+      if (userId) {
+        where.userId = userId;
+      }
 
-    const skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;
 
-    // Build orderBy based on sortBy
-    let orderBy: any = {};
-    if (sortBy === 'likes') {
-      orderBy = { likes: sortOrder };
-    } else if (sortBy === 'comments') {
-      orderBy = { comments: { _count: sortOrder } };
-    } else {
-      orderBy = { createdAt: sortOrder };
-    }
+      // Build orderBy based on sortBy
+      let orderBy: Record<string, any> = {};
+      if (String(sortBy) === 'likes') {
+        orderBy = { likes: sortOrder };
+      } else if (String(sortBy) === 'comments') {
+        orderBy = { comments: { _count: sortOrder } };
+      } else {
+        orderBy = { createdAt: sortOrder };
+      }
 
-    const [posts, total] = await Promise.all([
-      this.prisma.post.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy,
-        include: {
-          user: true,
-          _count: {
-            select: { comments: true },
+      const [posts, total] = await Promise.all([
+        this.prisma.post.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy,
+          include: {
+            user: true,
+            _count: {
+              select: { comments: true },
+            },
+            likedBy: currentUserId
+              ? {
+                  where: { userId: currentUserId },
+                  select: { userId: true },
+                }
+              : false,
           },
-          likedBy: currentUserId ? {
-            where: { userId: currentUserId },
-            select: { userId: true },
-          } : false,
-        },
-      }),
-      this.prisma.post.count({ where }),
-    ]);
+        }),
+        this.prisma.post.count({ where }),
+      ]);
 
-    return {
-      data: posts.map((post: any) => new PostResponseDto(post, currentUserId)),
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-      hasNext: page < Math.ceil(total / limit),
-      hasPrev: page > 1,
-    };
+      return {
+        data: posts.map((post) => new PostResponseDto(post, currentUserId)),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1,
+      };
+    } catch (error) {
+      console.error('Error in PostsService.findAll:', error);
+      if (error instanceof Error) {
+        console.error('Stack:', error.stack);
+      }
+      throw error;
+    }
   }
 
   async findOne(id: string, currentUserId?: string): Promise<PostResponseDto> {
@@ -104,10 +123,12 @@ export class PostsService {
         _count: {
           select: { comments: true },
         },
-        likedBy: currentUserId ? {
-          where: { userId: currentUserId },
-          select: { userId: true },
-        } : false,
+        likedBy: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
     });
 
@@ -115,10 +136,14 @@ export class PostsService {
       throw new NotFoundException('Post not found');
     }
 
-    return new PostResponseDto(post as any, currentUserId);
+    return new PostResponseDto(post, currentUserId);
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto, userId: string): Promise<PostResponseDto> {
+  async update(
+    id: string,
+    updatePostDto: UpdatePostDto,
+    userId: string,
+  ): Promise<PostResponseDto> {
     const post = await this.prisma.post.findUnique({
       where: { id },
     });
@@ -146,7 +171,7 @@ export class PostsService {
       },
     });
 
-    return new PostResponseDto(updatedPost as any, userId);
+    return new PostResponseDto(updatedPost, userId);
   }
 
   async remove(id: string, userId: string, userRole: string): Promise<void> {
@@ -159,7 +184,7 @@ export class PostsService {
     }
 
     // Allow deletion if user is the author or an admin
-    if (post.userId !== userId && userRole !== 'ADMIN') {
+    if (post.userId !== userId && String(userRole) !== 'ADMIN') {
       throw new ForbiddenException('You can only delete your own posts');
     }
 
@@ -168,7 +193,10 @@ export class PostsService {
     });
   }
 
-  async toggleLike(postId: string, userId: string): Promise<{ liked: boolean; likes: number }> {
+  async toggleLike(
+    postId: string,
+    userId: string,
+  ): Promise<{ liked: boolean; likes: number }> {
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
     });
@@ -189,39 +217,31 @@ export class PostsService {
 
     if (existingLike) {
       // Unlike the post
-      await this.prisma.$transaction([
-        this.prisma.postLike.delete({
-          where: { id: existingLike.id },
-        }),
-        this.prisma.post.update({
-          where: { id: postId },
-          data: { likes: { decrement: 1 } },
-        }),
-      ]);
-
+      await this.prisma.postLike.delete({
+        where: { id: existingLike.id },
+      });
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { likes: { decrement: 1 } },
+      });
       return { liked: false, likes: post.likes - 1 };
     } else {
-      // Like the post
-      const [_, updatedPost] = await this.prisma.$transaction([
-        this.prisma.postLike.create({
-          data: {
-            postId,
-            userId,
-          },
-        }),
-        this.prisma.post.update({
-          where: { id: postId },
-          data: { likes: { increment: 1 } },
-        }),
-      ]);
-
+      await this.prisma.postLike.create({
+        data: {
+          postId,
+          userId,
+        },
+      });
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { likes: { increment: 1 } },
+      });
       // Create notification for post author
       if (post.userId !== userId) {
         const liker = await this.prisma.user.findUnique({
           where: { id: userId },
           select: { name: true },
         });
-
         await this.notificationsService.createNotification({
           userId: post.userId,
           type: 'POST_LIKED',
@@ -230,7 +250,6 @@ export class PostsService {
           relatedId: postId,
         });
       }
-
       return { liked: true, likes: post.likes + 1 };
     }
   }
@@ -244,13 +263,15 @@ export class PostsService {
         _count: {
           select: { comments: true },
         },
-        likedBy: currentUserId ? {
-          where: { userId: currentUserId },
-          select: { userId: true },
-        } : false,
+        likedBy: currentUserId
+          ? {
+              where: { userId: currentUserId },
+              select: { userId: true },
+            }
+          : false,
       },
     });
 
-    return posts.map((post: any) => new PostResponseDto(post, currentUserId));
+    return posts.map((post) => new PostResponseDto(post, currentUserId));
   }
 }

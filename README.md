@@ -1593,6 +1593,46 @@ GET /notifications?type=BOOKING_CONFIRMED&page=1&limit=1
 
 ---
 
+## 🧪 Testing & CI/CD
+
+### End-to-End (e2e) Test Environment
+
+- **Test Database:**
+  - The project uses a dedicated test Postgres database container for e2e tests, defined in `docker-compose.test.yml`.
+  - Test environment variables are stored in `.env.test` (ignored in version control and Docker builds).
+
+#### Running e2e Tests
+
+1. **Start the test database:**
+   ```bash
+   npm run test:e2e:db
+   ```
+2. **Run migrations and seed the test DB:**
+   ```bash
+   npx prisma migrate deploy --schema=prisma/schema.prisma
+   npm run test:e2e:seed
+   ```
+3. **Run e2e tests:**
+   ```bash
+   npm run test:e2e
+   ```
+   (This script will start the DB, migrate, seed, run tests, and shut down the DB automatically.)
+
+#### Test Scripts
+- `test:e2e:db` - Start the test DB container
+- `test:e2e:db:down` - Stop and remove the test DB container
+- `test:e2e:seed` - Seed the test DB
+- `test:e2e` - Full e2e test cycle (db up, migrate, seed, test, db down)
+
+#### Environment Files
+- `.env.test` - Used for test DB credentials and secrets (ignored in git and Docker)
+
+### Continuous Integration (CI)
+- The project uses GitHub Actions for CI. The workflow runs lint, unit, integration, and e2e tests, and builds the project on every push and pull request to `master`/`main`.
+- See `.github/workflows/ci.yml` for details.
+
+---
+
 ## 🧪 Running Tests
 
 - **Unit & Integration Tests:**
@@ -1641,3 +1681,121 @@ This project is distributed under the MIT License. See `LICENSE` for more inform
 
 ---
 Happy Travels and Happy Coding!
+
+---
+
+## 🛠️ CI/CD Pipeline Details
+
+### GitHub Actions Workflow
+
+The project uses a robust GitHub Actions workflow for Continuous Integration (CI):
+- **Triggers:** On every push and pull request to `master`/`main`.
+- **Jobs:**
+  1. **Checkout code**
+  2. **Set up Node.js** (uses Node 20)
+  3. **Start PostgreSQL service** (runs a Postgres 15 container)
+  4. **Wait for DB health**
+  5. **Install dependencies** (`npm ci`)
+  6. **Run Prisma migrations** (`npx prisma migrate deploy`)
+  7. **Seed the database** (`npx prisma db seed`)
+  8. **Generate Prisma client** (`npm run prisma:generate`)
+  9. **Lint code** (`npm run lint`)
+  10. **Run unit & integration tests** (`npm test`)
+  11. **Run e2e tests** (`npm run test:e2e`)
+  12. **Build project** (`npm run build`)
+  13. **Upload coverage report** (as an artifact)
+
+#### Example Workflow File: `.github/workflows/ci.yml`
+```yaml
+name: CI
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: mysecretpassword
+          POSTGRES_DB: trip_mate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:mysecretpassword@localhost:5432/trip_mate
+      JWT_SECRET: dummy_jwt_secret_for_ci
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "Postgres is ready!" && break
+            fi
+            echo "Waiting for Postgres..."
+            sleep 2
+          done
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Prisma Migrations
+        run: npx prisma migrate deploy
+      - name: Seed Database
+        run: npx prisma db seed
+      - name: Generate Prisma client
+        run: npm run prisma:generate
+      - name: Lint code
+        run: npm run lint
+      - name: Run unit & integration tests
+        run: npm test
+      - name: Run e2e tests
+        run: npm run test:e2e
+      - name: Build project
+        run: npm run build
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+```
+
+### Running CI Steps Locally
+
+You can simulate the CI workflow locally using the provided scripts:
+- **Lint:** `npm run lint`
+- **Unit/Integration Tests:** `npm test`
+- **E2E Tests:** `npm run test:e2e` (uses Docker for test DB)
+- **Build:** `npm run build`
+- **Coverage:** `npm run test:cov` or `npm run test:cov:html`
+
+> **Tip:** Always run `npm run lint` and `npm test` before pushing to catch issues early.
+
+### Best Practices for CI/CD
+- **Never commit `.env`, `.env.test`, or other secrets.**
+- **Keep `docker-compose.test.yml` and `.env.test` out of Docker images and version control.**
+- **Use `npm ci` in CI for clean, reproducible installs.**
+- **Keep your Prisma schema and migrations in sync.**
+- **Seed your test DB for reliable e2e tests.**
+- **Upload coverage reports as artifacts for review.**
+
+### Troubleshooting CI/CD
+- **Database connection errors:** Ensure the test DB container is healthy and env vars are correct.
+- **Test failures:** Check logs for stack traces. Run tests locally with the same scripts as CI.
+- **Lint errors:** Run `npm run lint -- --fix` to auto-fix common issues.
+- **Out-of-date Prisma client:** Run `npx prisma generate` after schema changes.
+- **Docker issues:** Make sure Docker is running and ports are not in use.
+
+For more, see the `.github/workflows/ci.yml` file and the scripts in `package.json`.
+
+---

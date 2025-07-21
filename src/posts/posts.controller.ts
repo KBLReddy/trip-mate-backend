@@ -29,7 +29,7 @@ import { Public } from '../common/decorators/optional-auth.decorator';
 import { User } from '@prisma/client';
 
 @ApiTags('posts')
-@UseGuards(JwtAuthGuard) 
+@UseGuards(JwtAuthGuard)
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
@@ -37,7 +37,11 @@ export class PostsController {
   @Post()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new post' })
-  @ApiResponse({ status: 201, description: 'Post created successfully', type: PostResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Post created successfully',
+    type: PostResponseDto,
+  })
   async create(
     @Body() createPostDto: CreatePostDto,
     @CurrentUser() user: User,
@@ -49,11 +53,13 @@ export class PostsController {
   @Public()
   @ApiOperation({ summary: 'Get all posts' })
   @ApiResponse({ status: 200, description: 'List of posts' })
-  async findAll(
-    @Query() query: PostQueryDto,
-    @CurrentUser() user?: User,
-  ) {
-    return this.postsService.findAll(query, user?.id);
+  async findAll(@Query() query: PostQueryDto, @CurrentUser() user?: User) {
+    try {
+      return await this.postsService.findAll(query, user?.id);
+    } catch (error) {
+      console.error('Error in GET /posts:', error);
+      throw error;
+    }
   }
 
   @Get('user/:userId')
@@ -70,7 +76,11 @@ export class PostsController {
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Get post details' })
-  @ApiResponse({ status: 200, description: 'Post details', type: PostResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Post details',
+    type: PostResponseDto,
+  })
   async findOne(
     @Param('id') id: string,
     @CurrentUser() user?: User,
@@ -82,7 +92,11 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a post' })
-  @ApiResponse({ status: 200, description: 'Post updated successfully', type: PostResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Post updated successfully',
+    type: PostResponseDto,
+  })
   async update(
     @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,

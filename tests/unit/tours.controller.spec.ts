@@ -54,7 +54,7 @@ describe('ToursController', () => {
       capacity: 10,
       category: 'ADVENTURE',
     };
-    await controller.create(dto, mockUser);
+    await controller.create(dto);
     expect(service.create).toHaveBeenCalled();
   });
   it('should call findAll', async () => {

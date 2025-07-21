@@ -50,11 +50,14 @@ export class PostResponseDto {
   @ApiProperty()
   isLikedByCurrentUser: boolean;
 
-  constructor(post: Post & { 
-    user: User; 
-    _count?: { comments: number };
-    likedBy?: Array<{ userId: string }>;
-  }, currentUserId?: string) {
+  constructor(
+    post: Post & {
+      user: User;
+      _count?: { comments: number };
+      likedBy?: Array<{ userId: string }>;
+    },
+    currentUserId?: string,
+  ) {
     this.id = post.id;
     this.userId = post.userId;
     this.title = post.title;
@@ -70,8 +73,8 @@ export class PostResponseDto {
       avatar: post.user.avatar,
     };
     this.commentCount = post._count?.comments || 0;
-    this.isLikedByCurrentUser = currentUserId 
-      ? (post.likedBy?.some(like => like.userId === currentUserId) || false)
+    this.isLikedByCurrentUser = currentUserId
+      ? post.likedBy?.some((like) => like.userId === currentUserId) || false
       : false;
   }
 }

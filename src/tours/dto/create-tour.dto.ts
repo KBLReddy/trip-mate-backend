@@ -1,7 +1,15 @@
 // src/tours/dto/create-tour.dto.ts
 import { IsEndDateAfterStartDate } from '../../common/validators/date-range.validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsNumber, IsDateString, IsOptional, Min, IsPositive } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsDateString,
+  IsOptional,
+  Min,
+  IsPositive,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateTourDto {
@@ -10,7 +18,9 @@ export class CreateTourDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ example: 'Experience the beauty of Bali with our 7-day adventure tour' })
+  @ApiProperty({
+    example: 'Experience the beauty of Bali with our 7-day adventure tour',
+  })
   @IsString()
   @IsNotEmpty()
   description: string;
@@ -30,10 +40,10 @@ export class CreateTourDto {
   @IsDateString()
   startDate: string;
 
- @ApiProperty({ example: '2024-06-07T00:00:00Z' })
-@IsDateString()
-@IsEndDateAfterStartDate({ message: 'End date must be after start date' })
-endDate: string;
+  @ApiProperty({ example: '2024-06-07T00:00:00Z' })
+  @IsDateString()
+  @IsEndDateAfterStartDate({ message: 'End date must be after start date' })
+  endDate: string;
 
   @ApiProperty({ example: 20 })
   @IsNumber()
@@ -42,7 +52,10 @@ endDate: string;
   @Type(() => Number)
   capacity: number;
 
-  @ApiProperty({ example: 'https://example.com/tour-image.jpg', required: false })
+  @ApiProperty({
+    example: 'https://example.com/tour-image.jpg',
+    required: false,
+  })
   @IsString()
   @IsOptional()
   imageUrl?: string;

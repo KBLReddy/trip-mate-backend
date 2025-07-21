@@ -1,5 +1,9 @@
 // src/tours/tours.service.ts
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTourDto } from './dto/create-tour.dto';
 import { UpdateTourDto } from './dto/update-tour.dto';
@@ -13,7 +17,7 @@ import { Prisma, Role } from '@prisma/client';
 export class ToursService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createTourDto: CreateTourDto, userId: string): Promise<TourResponseDto> {
+  async create(createTourDto: CreateTourDto): Promise<TourResponseDto> {
     const tour = await this.prisma.tour.create({
       data: {
         ...createTourDto,
@@ -143,11 +147,13 @@ export class ToursService {
 
     // Check permissions (only admin or tour guide can update)
     if (userRole !== Role.ADMIN && existingTour.guideId !== userId) {
-      throw new ForbiddenException('You do not have permission to update this tour');
+      throw new ForbiddenException(
+        'You do not have permission to update this tour',
+      );
     }
 
     // Prepare update data
-    const updateData: any = { ...updateTourDto };
+    const updateData: Record<string, unknown> = { ...updateTourDto };
     if (updateTourDto.price !== undefined) {
       updateData.price = new Prisma.Decimal(updateTourDto.price);
     }
@@ -190,7 +196,9 @@ export class ToursService {
 
     // Check permissions
     if (userRole !== Role.ADMIN && tour.guideId !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this tour');
+      throw new ForbiddenException(
+        'You do not have permission to delete this tour',
+      );
     }
 
     // Check if tour has active bookings
@@ -216,111 +224,116 @@ export class ToursService {
 
     return categories.map((c) => c.category);
   }
-  async getSearchSuggestions(query: string): Promise<{ locations: string[]; titles: string[] }> {
-  if (!query || query.length < 2) {
-    return { locations: [], titles: [] };
+  async getSearchSuggestions(
+    query: string,
+  ): Promise<{ locations: string[]; titles: string[] }> {
+    if (!query || query.length < 2) {
+      return { locations: [], titles: [] };
+    }
+
+    const [locations, titles] = await Promise.all([
+      // Get unique locations
+      this.prisma.tour.findMany({
+        where: {
+          location: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+        select: {
+          location: true,
+        },
+        distinct: ['location'],
+        take: 5,
+      }),
+      // Get tour titles
+      this.prisma.tour.findMany({
+        where: {
+          title: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+        select: {
+          title: true,
+        },
+        take: 5,
+      }),
+    ]);
+
+    return {
+      locations: locations.map((l) => l.location),
+      titles: titles.map((t) => t.title),
+    };
   }
-
-  const [locations, titles] = await Promise.all([
-    // Get unique locations
-    this.prisma.tour.findMany({
-      where: {
-        location: {
-          contains: query,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        location: true,
-      },
-      distinct: ['location'],
-      take: 5,
-    }),
-    // Get tour titles
-    this.prisma.tour.findMany({
-      where: {
-        title: {
-          contains: query,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        title: true,
-      },
-      take: 5,
-    }),
-  ]);
-
-  return {
-    locations: locations.map((l) => l.location),
-    titles: titles.map((t) => t.title),
-  };
-}
 
   // Add this method to tours.service.ts
   async getStatistics(): Promise<TourStatisticsDto> {
-  const now = new Date();
+    const now = new Date();
 
-  // Get total tours
-  const totalTours = await this.prisma.tour.count();
+    // Get total tours
+    const totalTours = await this.prisma.tour.count();
 
-  // Get categories count
-  const categories = await this.prisma.tour.groupBy({
-    by: ['category'],
-    _count: true,
-  });
+    // Get categories count
+    const categories = await this.prisma.tour.groupBy({
+      by: ['category'],
+      _count: true,
+    });
 
-  // Get average price
-  const priceAggregate = await this.prisma.tour.aggregate({
-    _avg: {
-      price: true,
-    },
-  });
-
-  // Get tour counts by status
-  const [upcomingTours, ongoingTours, completedTours] = await Promise.all([
-    this.prisma.tour.count({
-      where: {
-        startDate: {
-          gt: now,
-        },
+    // Get average price
+    const priceAggregate = await this.prisma.tour.aggregate({
+      _avg: {
+        price: true,
       },
-    }),
-    this.prisma.tour.count({
-      where: {
-        startDate: {
-          lte: now,
-        },
-        endDate: {
-          gte: now,
-        },
-      },
-    }),
-    this.prisma.tour.count({
-      where: {
-        endDate: {
-          lt: now,
-        },
-      },
-    }),
-  ]);
+    });
 
-  // Create category map
-  const toursByCategory = categories.reduce((acc, cat) => {
-    acc[cat.category] = cat._count;
-    return acc;
-  }, {} as Record<string, number>);
+    // Get tour counts by status
+    const [upcomingTours, ongoingTours, completedTours] = await Promise.all([
+      this.prisma.tour.count({
+        where: {
+          startDate: {
+            gt: now,
+          },
+        },
+      }),
+      this.prisma.tour.count({
+        where: {
+          startDate: {
+            lte: now,
+          },
+          endDate: {
+            gte: now,
+          },
+        },
+      }),
+      this.prisma.tour.count({
+        where: {
+          endDate: {
+            lt: now,
+          },
+        },
+      }),
+    ]);
 
-  return {
-    totalTours,
-    totalCategories: categories.length,
-    averagePrice: Number(priceAggregate._avg.price) || 0,
-    upcomingTours,
-    ongoingTours,
-    completedTours,
-    toursByCategory,
-  };
- }
+    // Create category map
+    const toursByCategory = categories.reduce(
+      (acc, cat) => {
+        acc[cat.category] = cat._count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return {
+      totalTours,
+      totalCategories: categories.length,
+      averagePrice: Number(priceAggregate._avg.price) || 0,
+      upcomingTours,
+      ongoingTours,
+      completedTours,
+      toursByCategory,
+    };
+  }
 
   async getAvailableCapacity(tourId: string): Promise<number> {
     const tour = await this.prisma.tour.findUnique({
@@ -341,5 +354,4 @@ export class ToursService {
     const bookedCapacity = tour.bookings.length;
     return tour.capacity - bookedCapacity;
   }
-  
 }

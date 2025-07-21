@@ -10,6 +10,7 @@ import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AppService } from './app.service';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { AppService } from './app.service';
     CommentsModule,
     NotificationsModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

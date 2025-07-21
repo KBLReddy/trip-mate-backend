@@ -8,21 +8,23 @@ import {
 } from 'class-validator';
 
 @ValidatorConstraint({ name: 'isEndDateAfterStartDate', async: false })
-export class IsEndDateAfterStartDateConstraint implements ValidatorConstraintInterface {
-  validate(endDate: any, args: ValidationArguments) {
-    const startDate = (args.object as any).startDate;
+export class IsEndDateAfterStartDateConstraint
+  implements ValidatorConstraintInterface
+{
+  validate(endDate: string | Date, args: ValidationArguments): boolean {
+    const obj = args.object as { startDate?: string | Date };
+    const startDate = obj.startDate;
     if (!startDate || !endDate) return true;
-    
     return new Date(endDate) > new Date(startDate);
   }
 
-  defaultMessage(args: ValidationArguments) {
+  defaultMessage(): string {
     return 'End date must be after start date';
   }
 }
 
 export function IsEndDateAfterStartDate(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
