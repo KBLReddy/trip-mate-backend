@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as _request from 'supertest';
 import { createTestApp } from '../setup/test-app';
 
 describe('PostsController (e2e)', () => {
@@ -15,7 +15,7 @@ describe('PostsController (e2e)', () => {
 
   describe('/posts (POST)', () => {
     it('should return 401 if not authenticated', async () => {
-      const res = await request(app.getHttpServer())
+      const res = await _request(app.getHttpServer())
         .post('/posts')
         .send({ title: 'Post', content: 'Content' });
       expect(res.status).toBe(401);
@@ -26,7 +26,7 @@ describe('PostsController (e2e)', () => {
 
   describe('/posts (GET)', () => {
   it('should return 200 for public access', async () => {
-    const res = await request(app.getHttpServer())
+    const res = await _request(app.getHttpServer())
       .get('/posts');
     
     // Add debugging to see the actual error
