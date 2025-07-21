@@ -18,7 +18,7 @@ test-results/
 .env.local
 
 # Docker/test files
-docker-compose.test.yml
+#docker-compose.test.yml
 
 # Logs
 logs/
