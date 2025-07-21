@@ -3,10 +3,14 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentResponseDto } from './dto/comment-response.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService, // Injected for notification creation
+  ) {}
 
   async create(
     postId: string,
@@ -40,14 +44,12 @@ export class CommentsService {
         select: { name: true },
       });
 
-      await this.prisma.notification.create({
-        data: {
-          userId: post.userId,
-          type: 'POST_COMMENTED',
-          title: 'New comment on your post',
-          content: `${commenter?.name} commented on your post "${post.title}"`,
-          relatedId: postId,
-        },
+      await this.notificationsService.createNotification({
+        userId: post.userId,
+        type: 'POST_COMMENTED',
+        title: 'New comment on your post',
+        content: `${commenter?.name} commented on your post "${post.title}"`,
+        relatedId: postId,
       });
     }
 

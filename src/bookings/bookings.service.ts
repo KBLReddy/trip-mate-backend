@@ -13,12 +13,14 @@ import { BookingStatisticsDto } from './dto/booking-statistics.dto';
 import { BookingResponseDto } from './dto/booking-response.dto';
 import { Prisma, BookingStatus, PaymentStatus, Role } from '@prisma/client';
 import { ToursService } from '../tours/tours.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class BookingsService {
   constructor(
     private prisma: PrismaService,
     private toursService: ToursService,
+    private notificationsService: NotificationsService, // Injected for notification creation
   ) {}
 
   async create(createBookingDto: CreateBookingDto, userId: string) {
@@ -80,14 +82,12 @@ export class BookingsService {
     });
 
     // Create notification for the booking
-    await this.prisma.notification.create({
-      data: {
-        userId,
-        type: 'BOOKING_CONFIRMED',
-        title: 'Booking Created',
-        content: `Your booking for ${tour.title} has been created. Please complete the payment.`,
-        relatedId: booking.id,
-      },
+    await this.notificationsService.createNotification({
+      userId,
+      type: 'BOOKING_CONFIRMED',
+      title: 'Booking Created',
+      content: `Your booking for ${tour.title} has been created. Please complete the payment.`,
+      relatedId: booking.id,
     });
 
     return this.formatBookingResponse(booking);
@@ -226,14 +226,12 @@ export class BookingsService {
 
     // Create notification for status change
     if (updateBookingStatusDto.status === BookingStatus.CANCELLED) {
-      await this.prisma.notification.create({
-        data: {
-          userId: booking.userId,
-          type: 'BOOKING_CANCELLED',
-          title: 'Booking Cancelled',
-          content: `Your booking for ${booking.tour.title} has been cancelled.`,
-          relatedId: booking.id,
-        },
+      await this.notificationsService.createNotification({
+        userId: booking.userId,
+        type: 'BOOKING_CANCELLED',
+        title: 'Booking Cancelled',
+        content: `Your booking for ${booking.tour.title} has been cancelled.`,
+        relatedId: booking.id,
       });
     }
 
@@ -351,14 +349,12 @@ export class BookingsService {
     });
 
     // Create payment success notification
-    await this.prisma.notification.create({
-      data: {
-        userId: booking.userId,
-        type: 'PAYMENT_SUCCESS',
-        title: 'Payment Confirmed',
-        content: `Your payment for ${booking.tour.title} has been confirmed.`,
-        relatedId: booking.id,
-      },
+    await this.notificationsService.createNotification({
+      userId: booking.userId,
+      type: 'PAYMENT_SUCCESS',
+      title: 'Payment Confirmed',
+      content: `Your payment for ${booking.tour.title} has been confirmed.`,
+      relatedId: booking.id,
     });
 
     return this.formatBookingResponse(updatedBooking);

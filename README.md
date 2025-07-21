@@ -1,7 +1,7 @@
 # Trip-Mate Backend ✈️
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/KBLReddy/trip-mate-backend/main/logo.png" alt="Trip-Mate Logo" width="200"/>
+  <img src="logo.png" alt="Trip-Mate Logo" width="200"/>
 </p>
 
 <p align="center">
@@ -33,8 +33,15 @@ Welcome to the Trip-Mate backend repository! This project provides a robust, sca
 -   [🔐 API Authentication Flow](#-api-authentication-flow)
 -   [📚 API Endpoint Documentation](#-api-endpoint-documentation)
     -   [Auth Module (`/auth`)](#auth-module-auth)
+    -   [JWT & Refresh Token Theory and Usage](#jwt--refresh-token-theory-and-usage)
     -   [Users Module (`/users`)](#users-module-users)
     -   [Trips Module (`/trips`)](#trips-module-trips)
+    -   [Tours Module (`/tours`)](#tours-module-tours)
+    -   [Bookings Module (`/bookings`)](#bookings-module-bookings)
+    -   [Posts Module (`/posts`)](#posts-module-posts)
+    -   [Comments Module (`/postspostidcomments`)](#comments-module-postspostidcomments)
+    -   [Notifications Module (`/notifications`)](#notifications-module-notifications)
+-   [🧪 Running Tests](#-running-tests)
 -   [🤝 Contributing](#-contributing)
 -   [📜 License](#-license)
 
@@ -190,7 +197,18 @@ Endpoints that require this header are marked with a 🔒 emoji in the documenta
 
 ## 📚 API Endpoint Documentation
 
-This section provides a complete reference for all available API endpoints.
+> **Note:**
+> - All endpoints marked as **🔒 Protected** require you to include your access token in the `Authorization` header of every request:
+>   ```
+>   Authorization: Bearer <access_token>
+>   ```
+> - You receive the `access_token` (and `refresh_token`) after logging in or registering.
+> - **Refresh tokens** are only used for `/auth/refresh` and `/auth/logout` endpoints. For those, use:
+>   ```
+>   Authorization: Bearer <refresh_token>
+>   ```
+>   and include the refresh token in the request body as well.
+> - If you omit the access token for protected endpoints, you will receive a `401 Unauthorized` error.
 
 ### **Auth Module (`/auth`)**
 
@@ -236,10 +254,188 @@ Handles user registration and authentication.
 -   **Success Response (200 OK)**:
     ```json
     {
-      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "user-uuid-123",
+        "email": "user@tripmate.com",
+        "name": "Test User",
+        "role": "USER"
+      }
     }
     ```
 -   **Error Response (401 Unauthorized)**: If credentials are invalid.
+
+#### 3. Refresh Access Token
+-   **Endpoint**: `POST /auth/refresh`
+-   **Description**: Refreshes the access token using a valid refresh token.
+-   **Authentication**: 🔒 Requires valid refresh token in `Authorization` header.
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "refreshToken": "<your_refresh_token>"
+    }
+    ```
+-   **Headers:**
+    ```
+    Authorization: Bearer <refresh_token>
+    ```
+-   **Success Response (200 OK)**:
+    ```json
+    {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "user-uuid-123",
+        "email": "user@tripmate.com",
+        "name": "Test User",
+        "role": "USER"
+      }
+    }
+    ```
+-   **Error Response (403 Forbidden)**: If the refresh token is invalid or expired.
+
+#### 4. Logout
+-   **Endpoint**: `POST /auth/logout`
+-   **Description**: Logs out the user and invalidates the refresh token.
+-   **Authentication**: 🔒 Requires valid access token in `Authorization` header.
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "refreshToken": "<your_refresh_token>"
+    }
+    ```
+-   **Headers:**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+    and in the body:
+    ```json
+    {
+      "refreshToken": "<refresh_token>"
+    }
+    ```
+-   **Success Response (200 OK)**: Empty response.
+
+---
+
+### **JWT & Refresh Token Theory and Usage**
+
+- **JWT (JSON Web Token)** is used for stateless authentication. After login, the server issues an `accessToken` (short-lived) and a `refreshToken` (longer-lived).
+- **Access Token**: Used in the `Authorization` header for protected endpoints. Expires quickly (e.g., 15 minutes).
+- **Refresh Token**: Used to obtain a new access token when the old one expires. Should be stored securely (e.g., HTTP-only cookie or secure storage).
+- **Logout**: Always send the refresh token to invalidate it on the server.
+
+**Example: Login, Use, Refresh, and Logout**
+```js
+// Login
+fetch('/api/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: 'user@example.com', password: 'password123' })
+})
+  .then(res => res.json())
+  .then(({ accessToken, refreshToken }) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+  });
+
+// Use access token
+fetch('/api/users/me', {
+  headers: { 'Authorization': 'Bearer ' + localStorage.getItem('accessToken') }
+});
+
+// Refresh token
+fetch('/api/auth/refresh', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + localStorage.getItem('refreshToken')
+  },
+  body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') })
+})
+  .then(res => res.json())
+  .then(({ accessToken, refreshToken }) => {
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+  });
+
+// Logout
+fetch('/api/auth/logout', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+  },
+  body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') })
+});
+```
+
+#### Android (Kotlin + Jetpack Compose + Retrofit) Example
+
+```kotlin
+// Retrofit API interface
+interface AuthApi {
+    @POST("/api/auth/login")
+    suspend fun login(@Body body: LoginRequest): AuthResponse
+
+    @POST("/api/auth/refresh")
+    suspend fun refresh(
+        @Header("Authorization") refreshToken: String,
+        @Body body: RefreshRequest
+    ): AuthResponse
+
+    @POST("/api/auth/logout")
+    suspend fun logout(
+        @Header("Authorization") accessToken: String,
+        @Body body: RefreshRequest
+    ): Response<Unit>
+
+    @GET("/api/users/me")
+    suspend fun getProfile(@Header("Authorization") accessToken: String): UserProfile
+}
+
+data class LoginRequest(val email: String, val password: String)
+data class RefreshRequest(val refreshToken: String)
+data class AuthResponse(val accessToken: String, val refreshToken: String, val user: UserProfile)
+data class UserProfile(val id: String, val email: String, val name: String, val role: String)
+
+// Usage in a ViewModel or Repository
+suspend fun loginAndStoreTokens(api: AuthApi, email: String, password: String, context: Context) {
+    val response = api.login(LoginRequest(email, password))
+    // Store tokens securely (e.g., DataStore, EncryptedSharedPreferences)
+    saveToken(context, "accessToken", response.accessToken)
+    saveToken(context, "refreshToken", response.refreshToken)
+}
+
+suspend fun getProfile(api: AuthApi, context: Context): UserProfile {
+    val accessToken = getToken(context, "accessToken")
+    return api.getProfile("Bearer $accessToken")
+}
+
+suspend fun refreshToken(api: AuthApi, context: Context) {
+    val refreshToken = getToken(context, "refreshToken")
+    val response = api.refresh("Bearer $refreshToken", RefreshRequest(refreshToken))
+    saveToken(context, "accessToken", response.accessToken)
+    saveToken(context, "refreshToken", response.refreshToken)
+}
+
+suspend fun logout(api: AuthApi, context: Context) {
+    val accessToken = getToken(context, "accessToken")
+    val refreshToken = getToken(context, "refreshToken")
+    api.logout("Bearer $accessToken", RefreshRequest(refreshToken))
+    clearTokens(context)
+}
+
+// Helper functions (pseudo-code)
+fun saveToken(context: Context, key: String, value: String) { /* ... */ }
+fun getToken(context: Context, key: String): String { /* ... */ return "" }
+fun clearTokens(context: Context) { /* ... */ }
+```
+
+<!-- If you still cannot see this code block in your Markdown preview, try copying this section to a smaller Markdown file and previewing it separately. Some renderers have trouble with very large files. -->
+
+---
 
 ### **Users Module (`/users`)**
 
@@ -249,6 +445,10 @@ Handles user-specific data.
 -   **Endpoint**: `GET /users/me`
 -   **Description**: Retrieves the profile information of the currently authenticated user.
 -   **Authentication**: 🔒 Protected
+-   **Headers:**
+    ```
+    Authorization: Bearer <access_token>
+    ```
 -   **Success Response (200 OK)**:
     ```json
     {
@@ -258,6 +458,89 @@ Handles user-specific data.
     }
     ```
 -   **Error Response (401 Unauthorized)**: If the token is missing or invalid.
+
+#### 2. Update User Profile
+-   **Endpoint**: `PUT /users/me`
+-   **Description**: Updates the current user's profile.
+-   **Authentication**: 🔒 Protected
+-   **Headers:**
+    ```
+    Authorization: Bearer <access_token>
+    ```
+-   **Request Body**: `application/json` (optional fields)
+    ```json
+    {
+      "name": "Jane Doe Updated",
+      "avatar": "https://example.com/avatar.jpg"
+    }
+    ```
+-   **Success Response (200 OK)**: The updated user object.
+-   **Error Response (401 Unauthorized)**: If the token is missing or invalid.
+
+#### 3. Change Password
+-   **Endpoint**: `PUT /users/me/password`
+-   **Description**: Changes the current user's password.
+-   **Authentication**: 🔒 Protected
+-   **Request Body**: `application/json`
+    ```json
+    {
+      "currentPassword": "old-password",
+      "newPassword": "new-password"
+    }
+    ```
+-   **Success Response (200 OK)**: Empty response.
+-   **Error Response (401 Unauthorized)**: If the token is missing or invalid.
+-   **Error Response (400 Bad Request)**: If current password is incorrect.
+
+#### 4. Get All Users (Admin Only)
+-   **Endpoint**: `GET /users`
+-   **Description**: Retrieves a list of all users.
+-   **Authentication**: 🔒 Admin only
+-   **Success Response (200 OK)**: An array of user objects.
+    ```json
+    [
+        {
+            "id": "user-uuid-123",
+            "email": "user@tripmate.com",
+            "name": "Test User",
+            "role": "USER",
+            "createdAt": "2024-07-20T10:00:00.000Z"
+        }
+    ]
+    ```
+
+#### 5. Get User by ID (Admin Only)
+-   **Endpoint**: `GET /users/:id`
+-   **Description**: Retrieves a specific user by ID.
+-   **Authentication**: 🔒 Admin only
+-   **Path Parameters**:
+    *   `id` (string): The ID of the user.
+-   **Success Response (200 OK)**: The user object.
+
+#### 6. Update User by ID (Admin Only)
+-   **Endpoint**: `PUT /users/:id`
+-   **Description**: Updates a specific user's details.
+-   **Authentication**: 🔒 Admin only
+-   **Path Parameters**:
+    *   `id` (string): The ID of the user.
+-   **Request Body**: `application/json` (optional fields)
+    ```json
+    {
+      "name": "Admin User Updated",
+      "role": "ADMIN"
+    }
+    ```
+-   **Success Response (200 OK)**: The updated user object.
+
+#### 7. Delete User by ID (Admin Only)
+-   **Endpoint**: `DELETE /users/:id`
+-   **Description**: Deletes a specific user.
+-   **Authentication**: 🔒 Admin only
+-   **Path Parameters**:
+    *   `id` (string): The ID of the user.
+-   **Success Response (204 No Content)**: An empty response body.
+
+---
 
 ### **Trips Module (`/trips`)**
 
@@ -272,25 +555,34 @@ The core module for managing trips and all related data.
     {
       "name": "Summer Trip to Japan",
       "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
-      "startDate": "2024-07-20T00:00:00.000Z",
-      "endDate": "2024-07-30T00:00:00.000Z"
+      "startDate": "2025-07-20T00:00:00.000Z",
+      "endDate": "2025-07-30T00:00:00.000Z"
     }
     ```
     *   `startDate` & `endDate` must be in ISO 8601 format.
 
--   **Success Response (201 Created)**:
-    ```json
-    {
-        "id": "trip_abc123",
-        "name": "Summer Trip to Japan",
-        "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
-        "startDate": "2024-07-20T00:00:00.000Z",
-        "endDate": "2024-07-30T00:00:00.000Z",
-        "ownerId": "user_xyz789",
-        "createdAt": "...",
-        "updatedAt": "..."
-    }
-    ```
+**Sample Request:**
+```json
+{
+  "name": "Summer Trip to Japan",
+  "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
+  "startDate": "2025-07-20T00:00:00.000Z",
+  "endDate": "2025-07-30T00:00:00.000Z"
+}
+```
+**Sample Response (201 Created):**
+```json
+{
+  "id": "trip_abc123",
+  "name": "Summer Trip to Japan",
+  "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
+  "startDate": "2025-07-20T00:00:00.000Z",
+  "endDate": "2025-07-30T00:00:00.000Z",
+  "ownerId": "user_xyz789",
+  "createdAt": "2025-07-01T10:00:00.000Z",
+  "updatedAt": "2025-07-01T10:00:00.000Z"
+}
+```
 
 #### 2. Get All User's Trips
 -   **Endpoint**: `GET /trips`
@@ -310,6 +602,25 @@ The core module for managing trips and all related data.
     ]
     ```
 
+**Sample Response (200 OK):**
+```json
+[
+  {
+    "id": "trip_abc123",
+    "name": "Summer Trip to Japan",
+    "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
+    "startDate": "2025-07-20T00:00:00.000Z",
+    "endDate": "2025-07-30T00:00:00.000Z",
+    "ownerId": "user_xyz789"
+  }
+]
+```
+
+**Advanced Example: Empty List**
+```json
+[]
+```
+
 #### 3. Get a Single Trip by ID
 -   **Endpoint**: `GET /trips/:id`
 -   **Description**: Fetches all details for a specific trip, including members, destinations, activities, and expenses. The user must be a member of the trip to view it.
@@ -325,12 +636,35 @@ The core module for managing trips and all related data.
         "members": [
             { "user": { "id": "user_xyz789", "name": "Jane Doe", "email": "jane.doe@example.com" } }
         ],
-        "destinations": [ /* ... */ ],
-        "activities": [ /* ... */ ],
-        "expenses": [ /* ... */ ]
+        "destinations": [],
+        "activities": [],
+        "expenses": []
     }
     ```
--   **Error Response (404 Not Found)**: If the trip does not exist or the user is not a member.
+
+**Sample Response (200 OK):**
+```json
+{
+  "id": "trip_abc123",
+  "name": "Summer Trip to Japan",
+  "description": "A 10-day adventure exploring Tokyo, Kyoto, and Osaka.",
+  "members": [
+    { "user": { "id": "user_xyz789", "name": "Jane Doe", "email": "jane.doe@example.com" } }
+  ],
+  "destinations": [],
+  "activities": [],
+  "expenses": []
+}
+```
+
+**Advanced Example: Not Found (404)**
+```json
+{
+  "statusCode": 404,
+  "message": "Trip not found",
+  "error": "Not Found"
+}
+```
 
 #### 4. Update a Trip
 -   **Endpoint**: `PUT /trips/:id`
@@ -345,8 +679,36 @@ The core module for managing trips and all related data.
       "description": "Updated description with more details."
     }
     ```
--   **Success Response (200 OK)**: The updated trip object.
--   **Error Response (403 Forbidden)**: If the user is not the owner of the trip.
+
+**Sample Request:**
+```json
+{
+  "name": "An Epic Summer Trip to Japan",
+  "description": "Updated description with more details."
+}
+```
+**Sample Response (200 OK):**
+```json
+{
+  "id": "trip_abc123",
+  "name": "An Epic Summer Trip to Japan",
+  "description": "Updated description with more details.",
+  "startDate": "2025-07-20T00:00:00.000Z",
+  "endDate": "2025-07-30T00:00:00.000Z",
+  "ownerId": "user_xyz789",
+  "createdAt": "2025-07-01T10:00:00.000Z",
+  "updatedAt": "2025-07-02T10:00:00.000Z"
+}
+```
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You are not the owner of this trip",
+  "error": "Forbidden"
+}
+```
 
 #### 5. Delete a Trip
 -   **Endpoint**: `DELETE /trips/:id`
@@ -355,7 +717,20 @@ The core module for managing trips and all related data.
 -   **Path Parameters**:
     *   `id` (string): The ID of the trip to delete.
 -   **Success Response (204 No Content)**: An empty response body.
--   **Error Response (403 Forbidden)**: If the user is not the owner.
+
+**Sample Response (204 No Content):**
+```json
+{}
+```
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You are not the owner of this trip",
+  "error": "Forbidden"
+}
+```
 
 #### 6. Add a Member to a Trip
 -   **Endpoint**: `POST /trips/:id/members`
@@ -369,8 +744,33 @@ The core module for managing trips and all related data.
       "email": "friend@example.com"
     }
     ```
--   **Success Response (201 Created)**: The full trip object with the updated member list.
--   **Error Response (404 Not Found)**: If the user with the given email does not exist or the trip doesn't exist.
+
+**Sample Request:**
+```json
+{
+  "email": "friend@example.com"
+}
+```
+**Sample Response (201 Created):**
+```json
+{
+  "id": "trip_abc123",
+  "name": "Summer Trip to Japan",
+  "members": [
+    { "user": { "id": "user_xyz789", "name": "Jane Doe", "email": "jane.doe@example.com" } },
+    { "user": { "id": "friend_123", "name": "Friend User", "email": "friend@example.com" } }
+  ]
+}
+```
+
+**Advanced Example: User Not Found (404)**
+```json
+{
+  "statusCode": 404,
+  "message": "User with email friend@example.com not found",
+  "error": "Not Found"
+}
+```
 
 #### 7. Remove a Member from a Trip
 -   **Endpoint**: `DELETE /trips/:id/members/:userId`
@@ -380,8 +780,26 @@ The core module for managing trips and all related data.
     *   `id` (string): The ID of the trip.
     *   `userId` (string): The ID of the user to remove.
 -   **Success Response (200 OK)**: The full trip object with the updated member list.
--   **Error Response (403 Forbidden)**: If the user making the request is not the trip owner.
--   **Error Response (400 Bad Request)**: If trying to remove the owner of the trip.
+
+**Sample Response (200 OK):**
+```json
+{
+  "id": "trip_abc123",
+  "name": "Summer Trip to Japan",
+  "members": [
+    { "user": { "id": "user_xyz789", "name": "Jane Doe", "email": "jane.doe@example.com" } }
+  ]
+}
+```
+
+**Advanced Example: Bad Request (400)**
+```json
+{
+  "statusCode": 400,
+  "message": "Cannot remove the owner of the trip",
+  "error": "Bad Request"
+}
+```
 
 ---
 
@@ -556,6 +974,650 @@ Manage and track shared expenses for a trip.
     *   `expenseId` (string): The ID of the expense to delete.
 -   **Success Response (204 No Content)**: An empty response body.
 -   **Error Response (403 Forbidden)**: If the user is not the one who paid for the expense.
+
+---
+
+### **Tours Module (`/tours`)**
+
+Manage tours, search, statistics, and categories.
+
+#### 1. Create a New Tour
+- **Endpoint**: `POST /tours`
+- **Description**: Creates a new tour. Only Admins and Guides can create tours.
+- **Authentication**: 🔒 Protected (Admin/Guide)
+- **Request Body**:
+    ```json
+    {
+      "title": "Amazing Bali Adventure",
+      "description": "Experience the beauty of Bali with our 7-day adventure tour including temples, beaches, and rice terraces.",
+      "location": "Bali, Indonesia",
+      "price": 1299.99,
+      "startDate": "2025-06-01T00:00:00.000Z",
+      "endDate": "2025-06-07T00:00:00.000Z",
+      "capacity": 20,
+      "imageUrl": "https://images.unsplash.com/photo-1537996194471-e657df975ab4",
+      "category": "adventure"
+    }
+    ```
+- **Success Response (201 Created)**: Tour object.
+
+#### 2. Get All Tours
+- **Endpoint**: `GET /tours`
+- **Description**: List all tours with filters and pagination.
+- **Authentication**: 🔓 Public
+- **Query Parameters**:
+    - `search` (string): Search by title/location
+    - `category` (string)
+    - `location` (string)
+    - `minPrice` (number)
+    - `maxPrice` (number)
+    - `page` (number, default 1)
+    - `limit` (number, default 10)
+    - `sortBy` (string: price, startDate, createdAt)
+    - `sortOrder` (asc|desc)
+
+**Sample Response (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": "tour-uuid-123",
+      "title": "Amazing Bali Adventure",
+      "description": "Experience the beauty of Bali with our 7-day adventure tour including temples, beaches, and rice terraces.",
+      "location": "Bali, Indonesia",
+      "price": 1299.99,
+      "startDate": "2025-06-01T00:00:00.000Z",
+      "endDate": "2025-06-07T00:00:00.000Z",
+      "capacity": 20,
+      "imageUrl": "https://images.unsplash.com/photo-1537996194471-e657df975ab4",
+      "category": "adventure",
+      "guide": {
+        "id": "guide-uuid-123",
+        "name": "Tour Guide",
+        "email": "guide@tripmate.com"
+      },
+      "createdAt": "2024-07-20T10:00:00.000Z",
+      "updatedAt": "2024-07-20T10:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
+}
+```
+
+**Advanced Example: Pagination and Filtering**
+```
+GET /tours?category=adventure&page=2&limit=1&sortBy=price&sortOrder=desc
+```
+**Sample Response:**
+```json
+{
+  "data": [],
+  "total": 1,
+  "page": 2,
+  "limit": 1,
+  "totalPages": 2,
+  "hasNext": false,
+  "hasPrev": true
+}
+```
+
+#### 3. Get Tour Categories
+- **Endpoint**: `GET /tours/categories`
+- **Description**: List all available tour categories.
+- **Authentication**: 🔓 Public
+
+**Sample Response (200 OK):**
+```json
+["adventure", "cultural", "wildlife", "food"]
+```
+
+#### 4. Get Tour Details
+- **Endpoint**: `GET /tours/:id`
+- **Description**: Get details for a specific tour.
+- **Authentication**: 🔓 Public
+
+**Sample Response (200 OK):**
+```json
+{
+  "id": "tour-uuid-123",
+  "title": "Amazing Bali Adventure",
+  "description": "Experience the beauty of Bali with our 7-day adventure tour including temples, beaches, and rice terraces.",
+  "location": "Bali, Indonesia",
+  "price": 1299.99,
+  "startDate": "2025-06-01T00:00:00.000Z",
+  "endDate": "2025-06-07T00:00:00.000Z",
+  "capacity": 20,
+  "imageUrl": "https://images.unsplash.com/photo-1537996194471-e657df975ab4",
+  "category": "adventure",
+  "guide": {
+    "id": "guide-uuid-123",
+    "name": "Tour Guide",
+    "email": "guide@tripmate.com"
+  },
+  "createdAt": "2024-07-20T10:00:00.000Z",
+  "updatedAt": "2024-07-20T10:00:00.000Z"
+}
+```
+
+**Advanced Example: Not Found (404)**
+```json
+{
+  "statusCode": 404,
+  "message": "Tour with ID tour-uuid-999 not found",
+  "error": "Not Found"
+}
+```
+
+#### 5. Get Tour Availability
+- **Endpoint**: `GET /tours/:id/availability`
+- **Description**: Get available capacity for a tour.
+- **Authentication**: 🔓 Public
+
+**Sample Response (200 OK):**
+```json
+{
+  "availableCapacity": 18
+}
+```
+
+#### 6. Get Tour Statistics (Admin Only)
+- **Endpoint**: `GET /tours/statistics/overview`
+- **Description**: Get statistics about tours (total, by category, average price, etc.).
+- **Authentication**: 🔒 Admin only
+
+**Sample Response (200 OK):**
+```json
+{
+  "totalTours": 4,
+  "totalCategories": 4,
+  "averagePrice": 1574.99,
+  "upcomingTours": 3,
+  "ongoingTours": 1,
+  "completedTours": 0,
+  "toursByCategory": {
+    "adventure": 1,
+    "cultural": 1,
+    "wildlife": 1,
+    "food": 1
+  }
+}
+```
+
+#### 7. Update a Tour
+- **Endpoint**: `PUT /tours/:id`
+- **Description**: Update a tour. Only Admins/Guides can update.
+- **Authentication**: 🔒 Protected (Admin/Guide)
+
+**Sample Request:**
+```json
+{
+  "price": 1399.99,
+  "capacity": 25
+}
+```
+**Sample Response (200 OK):**
+```json
+{
+  "id": "tour-uuid-123",
+  "title": "Amazing Bali Adventure",
+  "description": "Experience the beauty of Bali with our 7-day adventure tour including temples, beaches, and rice terraces.",
+  "location": "Bali, Indonesia",
+  "price": 1399.99,
+  "startDate": "2025-06-01T00:00:00.000Z",
+  "endDate": "2025-06-07T00:00:00.000Z",
+  "capacity": 25,
+  "imageUrl": "https://images.unsplash.com/photo-1537996194471-e657df975ab4",
+  "category": "adventure",
+  "guide": {
+    "id": "guide-uuid-123",
+    "name": "Tour Guide",
+    "email": "guide@tripmate.com"
+  },
+  "createdAt": "2024-07-20T10:00:00.000Z",
+  "updatedAt": "2024-07-21T10:00:00.000Z"
+}
+```
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You do not have permission to update this tour",
+  "error": "Forbidden"
+}
+```
+
+#### 8. Delete a Tour
+- **Endpoint**: `DELETE /tours/:id`
+- **Description**: Delete a tour. Only Admins/Guides can delete.
+- **Authentication**: 🔒 Protected (Admin/Guide)
+
+**Sample Response (200 OK):**
+```json
+{}
+```
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You do not have permission to delete this tour",
+  "error": "Forbidden"
+}
+```
+
+#### 9. Search Suggestions
+- **Endpoint**: `GET /tours/search/suggestions?q=...`
+- **Description**: Get autocomplete suggestions for locations/titles.
+- **Authentication**: 🔓 Public
+
+**Sample Response (200 OK):**
+```json
+{
+  "locations": ["Bali, Indonesia", "Paris, France"],
+  "titles": ["Amazing Bali Adventure", "Paris City Tour"]
+}
+```
+
+---
+
+### **Bookings Module (`/bookings`)**
+
+Manage tour bookings, status, and statistics.
+
+#### 1. Create a Booking
+- **Endpoint**: `POST /bookings`
+- **Description**: Book a tour.
+- **Authentication**: 🔒 Protected
+- **Request Body**:
+    ```json
+    {
+      "tourId": "...",
+      "specialRequests": "Vegetarian meals"
+    }
+    ```
+- **Success Response (201 Created)**: Booking object.
+
+#### 2. List Bookings
+- **Endpoint**: `GET /bookings`
+- **Description**: List bookings. Admin sees all, users see their own.
+- **Authentication**: 🔒 Protected
+- **Query Parameters**:
+    - `status` (enum)
+    - `paymentStatus` (enum)
+    - `fromDate` (date)
+    - `toDate` (date)
+    - `page` (number)
+    - `limit` (number)
+
+**Advanced Example: Filtering by Status and Pagination**
+```
+GET /bookings?status=CONFIRMED&page=1&limit=2
+```
+**Sample Response:**
+```json
+{
+  "data": [
+    {
+      "id": "booking-uuid-1",
+      "userId": "user-uuid-123",
+      "tourId": "tour-uuid-123",
+      "bookingDate": "2025-05-01T10:00:00.000Z",
+      "status": "CONFIRMED",
+      "paymentStatus": "PAID",
+      "amount": 1299.99,
+      "specialRequests": "Vegetarian meals please",
+      "createdAt": "2025-05-01T10:00:00.000Z",
+      "updatedAt": "2025-05-01T10:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 2,
+  "totalPages": 1
+}
+```
+
+#### 3. Get My Bookings
+- **Endpoint**: `GET /bookings/my-bookings`
+- **Description**: List bookings for the current user.
+- **Authentication**: 🔒 Protected
+
+#### 4. Get Booking Statistics
+- **Endpoint**: `GET /bookings/statistics`
+- **Description**: Get booking stats (total, confirmed, revenue, etc.).
+- **Authentication**: 🔒 Protected
+
+#### 5. Get Booking Details
+- **Endpoint**: `GET /bookings/:id`
+- **Description**: Get details for a specific booking.
+- **Authentication**: 🔒 Protected
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You do not have permission to view this booking",
+  "error": "Forbidden"
+}
+```
+
+#### 6. Update Booking Status (Admin Only)
+- **Endpoint**: `PUT /bookings/:id/status`
+- **Description**: Update booking status (e.g., confirm, cancel).
+- **Authentication**: 🔒 Admin only
+- **Request Body**:
+    ```json
+    {
+      "status": "CONFIRMED"
+    }
+    ```
+
+**Advanced Example: Invalid Status Transition (400)**
+```json
+{
+  "statusCode": 400,
+  "message": "Cannot cancel a completed booking",
+  "error": "Bad Request"
+}
+```
+
+#### 7. Cancel a Booking
+- **Endpoint**: `PUT /bookings/:id/cancel`
+- **Description**: Cancel a booking.
+- **Authentication**: �� Protected
+
+#### 8. Confirm Payment (Admin Only)
+- **Endpoint**: `PUT /bookings/:id/confirm-payment`
+- **Description**: Confirm payment for a booking.
+- **Authentication**: 🔒 Admin only
+
+---
+
+### **Posts Module (`/posts`)**
+
+Community posts for sharing experiences.
+
+#### 1. Create a Post
+- **Endpoint**: `POST /posts`
+- **Description**: Create a new post.
+- **Authentication**: 🔒 Protected
+- **Request Body**:
+    ```json
+    {
+      "title": "My Amazing Trip to Bali",
+      "content": "Just returned from an incredible journey...",
+      "imageUrl": "https://example.com/image.jpg"
+    }
+    ```
+
+#### 2. List Posts
+- **Endpoint**: `GET /posts`
+- **Description**: List all posts (with search, pagination, sorting).
+- **Authentication**: 🔓 Public
+- **Query Parameters**:
+    - `search` (string)
+    - `userId` (string)
+    - `page` (number)
+    - `limit` (number)
+    - `sortBy` (createdAt, likes, comments)
+    - `sortOrder` (asc|desc)
+
+**Advanced Example: Search and Sort**
+```
+GET /posts?search=Bali&sortBy=likes&sortOrder=desc
+```
+**Sample Response:**
+```json
+{
+  "data": [
+    {
+      "id": "post-uuid-1",
+      "userId": "user-uuid-123",
+      "title": "My Amazing Bali Adventure",
+      "content": "Just returned from an incredible 7-day journey through Bali...",
+      "imageUrl": "https://images.unsplash.com/photo-1559628233-100c798642d4",
+      "likes": 15,
+      "createdAt": "2025-05-01T10:00:00.000Z",
+      "updatedAt": "2025-05-01T10:00:00.000Z",
+      "author": {
+        "id": "user-uuid-123",
+        "name": "Test User",
+        "email": "user@tripmate.com",
+        "avatar": null
+      },
+      "commentCount": 2,
+      "isLikedByCurrentUser": true
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
+}
+```
+
+#### 3. Get Posts by User
+- **Endpoint**: `GET /posts/user/:userId`
+- **Description**: List posts by a specific user.
+- **Authentication**: 🔓 Public
+
+#### 4. Get Post Details
+- **Endpoint**: `GET /posts/:id`
+- **Description**: Get details for a specific post.
+- **Authentication**: 🔓 Public
+
+**Advanced Example: Not Found (404)**
+```json
+{
+  "statusCode": 404,
+  "message": "Post not found",
+  "error": "Not Found"
+}
+```
+
+#### 5. Update a Post
+- **Endpoint**: `PUT /posts/:id`
+- **Description**: Update a post (author only).
+- **Authentication**: 🔒 Protected
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You can only update your own posts",
+  "error": "Forbidden"
+}
+```
+
+#### 6. Delete a Post
+- **Endpoint**: `DELETE /posts/:id`
+- **Description**: Delete a post (author or admin).
+- **Authentication**: 🔒 Protected
+
+---
+
+### **Comments Module (`/posts/:postId/comments`)**
+
+Add and manage comments on posts.
+
+#### 1. Add a Comment
+- **Endpoint**: `POST /posts/:postId/comments`
+- **Description**: Add a comment to a post.
+- **Authentication**: 🔒 Protected
+- **Request Body**:
+    ```json
+    {
+      "content": "Great post! Thanks for sharing."
+    }
+    ```
+
+#### 2. List Comments
+- **Endpoint**: `GET /posts/:postId/comments`
+- **Description**: List comments for a post (with pagination).
+- **Authentication**: 🔓 Public
+- **Query Parameters**:
+    - `page` (number)
+    - `limit` (number)
+
+**Advanced Example: Pagination**
+```
+GET /posts/post-uuid-1/comments?page=2&limit=1
+```
+**Sample Response:**
+```json
+{
+  "data": [],
+  "total": 2,
+  "page": 2,
+  "limit": 1,
+  "totalPages": 2
+}
+```
+
+#### 3. Delete a Comment
+- **Endpoint**: `DELETE /comments/:id`
+- **Description**: Delete a comment (author or admin).
+- **Authentication**: 🔒 Protected
+
+**Advanced Example: Forbidden (403)**
+```json
+{
+  "statusCode": 403,
+  "message": "You can only delete your own comments",
+  "error": "Forbidden"
+}
+```
+
+---
+
+### **Notifications Module (`/notifications`)**
+
+User notifications for bookings, posts, etc.
+
+#### 1. List Notifications
+- **Endpoint**: `GET /notifications`
+- **Description**: List notifications for the current user (with filters and pagination).
+- **Authentication**: 🔒 Protected
+- **Query Parameters**:
+    - `type` (enum)
+    - `isRead` (boolean)
+    - `page` (number)
+    - `limit` (number)
+
+**Advanced Example: Filtering by Type and Pagination**
+```
+GET /notifications?type=BOOKING_CONFIRMED&page=1&limit=1
+```
+**Sample Response:**
+```json
+{
+  "data": [
+    {
+      "id": "notif-uuid-1",
+      "userId": "user-uuid-123",
+      "type": "BOOKING_CONFIRMED",
+      "title": "Booking Confirmed",
+      "content": "Your booking for Amazing Bali Adventure has been confirmed!",
+      "isRead": false,
+      "relatedId": "booking-uuid-1",
+      "createdAt": "2025-05-01T10:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 1,
+  "totalPages": 1,
+  "hasNext": false,
+  "hasPrev": false
+}
+```
+
+#### 2. Get Notification Stats
+- **Endpoint**: `GET /notifications/stats`
+- **Description**: Get notification statistics (total, unread, by type).
+- **Authentication**: 🔒 Protected
+
+#### 3. Get Unread Count
+- **Endpoint**: `GET /notifications/unread-count`
+- **Description**: Get the count of unread notifications.
+- **Authentication**: 🔒 Protected
+
+#### 4. Get Notification Details
+- **Endpoint**: `GET /notifications/:id`
+- **Description**: Get details for a specific notification.
+- **Authentication**: 🔒 Protected
+
+**Advanced Example: Not Found (404)**
+```json
+{
+  "statusCode": 404,
+  "message": "Notification not found",
+  "error": "Not Found"
+}
+```
+
+#### 5. Mark Notifications as Read
+- **Endpoint**: `PUT /notifications/mark-read`
+- **Description**: Mark one or more notifications as read.
+- **Authentication**: 🔒 Protected
+- **Request Body**:
+    ```json
+    {
+      "notificationIds": ["id1", "id2"]
+    }
+    ```
+    (If omitted, marks all as read)
+
+#### 6. Mark Notification as Unread
+- **Endpoint**: `PUT /notifications/:id/unread`
+- **Description**: Mark a notification as unread.
+- **Authentication**: 🔒 Protected
+
+#### 7. Clear All Notifications
+- **Endpoint**: `DELETE /notifications/clear`
+- **Description**: Delete all notifications for the user.
+- **Authentication**: 🔒 Protected
+
+#### 8. Delete a Notification
+- **Endpoint**: `DELETE /notifications/:id`
+- **Description**: Delete a specific notification.
+- **Authentication**: 🔒 Protected
+
+---
+
+## 🧪 Running Tests
+
+- **Unit & Integration Tests:**
+  ```bash
+  npm test
+  ```
+
+- **Watch Mode:**
+  ```bash
+  npm run test:watch
+  ```
+
+- **Coverage Report:**
+  ```bash
+  npm run test:cov
+  # or for HTML report
+  npm run test:cov:html
+  ```
+
+- **End-to-End Tests:**
+  ```bash
+  npm run test:e2e
+  ```
+
+Coverage reports are generated in the `coverage/` directory. The project aims for at least 80% coverage on all metrics (branches, functions, lines, statements).
 
 ---
 

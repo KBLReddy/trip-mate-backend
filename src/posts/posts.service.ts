@@ -11,10 +11,14 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PostQueryDto } from './dto/post-query.dto';
 import { PostResponseDto } from './dto/post-response.dto';
 import { Prisma } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class PostsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService, // Injected for notification creation
+  ) {}
 
   async create(createPostDto: CreatePostDto, userId: string): Promise<PostResponseDto> {
     const post = await this.prisma.post.create({
@@ -218,14 +222,12 @@ export class PostsService {
           select: { name: true },
         });
 
-        await this.prisma.notification.create({
-          data: {
-            userId: post.userId,
-            type: 'POST_LIKED',
-            title: 'Someone liked your post',
-            content: `${liker?.name} liked your post "${post.title}"`,
-            relatedId: postId,
-          },
+        await this.notificationsService.createNotification({
+          userId: post.userId,
+          type: 'POST_LIKED',
+          title: 'Someone liked your post',
+          content: `${liker?.name} liked your post "${post.title}"`,
+          relatedId: postId,
         });
       }
 

@@ -59,3 +59,29 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
+
+# Coverage output
+coverage.json
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Vim swap files
+*.swp
+*.swo
+
+# SQLite DBs (if used)
+*.sqlite
+
+# Package tarballs
+*.tgz
+
+# Editor swap/backup files
+*~
+
+# Optionally ignore all of generated/ if you do not want to track any generated code
+generated/
+
+# Optionally ignore test outputs or snapshots if present in test/ or tests/ directories
+# tests/**/*.snap
+# test/**/*.snap

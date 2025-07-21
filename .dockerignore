@@ -11,3 +11,15 @@ coverage
 .nyc_output
 .DS_Store
 *.log
+test/
+tests/
+coverage.json
+generated/
+src/
+*.ts
+*.map
+prisma/migrations/
+API_DOCUMENTATION.md
+*.swp
+*.swo
+*~
