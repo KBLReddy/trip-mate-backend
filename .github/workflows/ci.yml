@@ -24,6 +24,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:mysecretpassword@localhost:5432/trip_mate
       JWT_SECRET: dummy_jwt_secret_for_ci
       JWT_REFRESH_SECRET: dummy_jwt_refresh_secret_for_ci
+      JWT_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_IN: 7d
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
