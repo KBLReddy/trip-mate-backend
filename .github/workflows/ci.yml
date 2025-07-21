@@ -60,8 +60,8 @@ jobs:
       - name: Lint code
         run: npm run lint
 
-      - name: Run unit & integration tests
-        run: npm test
+      - name: Run unit & integration tests with coverage
+        run: npm run test:cov
 
       - name: Run e2e tests
         run: npm run test:e2e
@@ -69,9 +69,28 @@ jobs:
       - name: Build project
         run: npm run build
 
+      # Upload coverage report as artifact
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage/ 
+          path: coverage/
+          retention-days: 7
+
+      # Optional: Upload to Codecov for better visualization
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: trip-mate-coverage
+          fail_ci_if_error: false
+
+      # Optional: Add coverage comment to PR
+      - name: Jest Coverage Comment
+        uses: ArtiomTr/jest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          coverage-file: ./coverage/coverage-final.json
