@@ -3,7 +3,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npm run prisma:migrate:deploy && node dist/main.js",
+    "startCommand": "npm run start:migrate:prod",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
