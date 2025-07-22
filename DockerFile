@@ -1,42 +1,44 @@
-# Dockerfile
+# ---- STAGE 1: Build the application ----
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and prisma schema for better caching
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies
+# Install ALL dependencies (including devDependencies needed for the build)
+# Using `npm ci` is best practice for CI/CD environments
 RUN npm ci
 
-# Copy source code
+# Copy the rest of the source code
 COPY . .
 
-# Generate Prisma Client
-RUN npm run prisma:generate
+# Generate Prisma Client and build the application
+# We can combine these into one layer
+RUN npm run prisma:generate && npm run build
 
-# Build application
-RUN npm run build
 
-# Production image
+# ---- STAGE 2: Create the final, small production image ----
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files again
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install ONLY production dependencies to keep the image small
+# `--omit=dev` is the modern replacement for `--only=production`
+RUN npm install --omit=dev
 
-# Copy built application
+# Copy the built application artifacts and prisma files from the 'builder' stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-# Expose port
+# Expose the port your application will run on
 EXPOSE 3000
 
-# Start application
+# The command to run your application
+# This will run migrations first, then start the server
 CMD ["npm", "run", "start:migrate:prod"]

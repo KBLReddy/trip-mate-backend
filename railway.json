@@ -1,7 +1,4 @@
 {
-  "build": {
-    "builder": "NIXPACKS"
-  },
   "deploy": {
     "startCommand": "npm run start:migrate:prod",
     "restartPolicyType": "ON_FAILURE",
