@@ -41,4 +41,5 @@ EXPOSE 3000
 
 # The command to run your application
 # This will run migrations first, then start the server
-CMD ["npm", "run", "start:migrate:prod"]
+#CMD ["npm", "run", "start:migrate:prod"]
+CMD ["sh", "-c", "echo '--- Contents of /app/dist ---' && ls -R /app/dist && echo '--- End of list ---'"]
