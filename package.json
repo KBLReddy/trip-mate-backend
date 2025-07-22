@@ -1,6 +1,9 @@
 {
   "name": "trip-mate-backend",
   "version": "0.0.1",
+  "engines": {
+    "node": ">=20.19.1"
+  },
   "description": "",
   "author": "",
   "private": true,
