@@ -1,6 +1,6 @@
 {
   "deploy": {
-    "startCommand": "npm run start:migrate:prod",
+    "startCommand": "npm run build && ls -R .",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
