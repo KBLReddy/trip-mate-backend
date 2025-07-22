@@ -1,4 +1,10 @@
 {
-  "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+"extends": "./tsconfig.json",
+"compilerOptions": {
+"outDir": "./dist", // compiled files go to /dist
+"rootDir": "./src", // take everything that lives in /src
+"removeComments": true // optional – strips TS comments
+},
+"include": ["src//*"], // compile all source files
+"exclude": ["node_modules", "test", "dist", "/*spec.ts"]
 }
