@@ -72,6 +72,9 @@ tests/
 # API docs
 API_DOCUMENTATION.md
 
+#dist
+dist/
+
 # Snapshots (optional)
 # tests/**/*.snap
 # test/**/*.snap
