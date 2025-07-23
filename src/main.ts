@@ -8,6 +8,12 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+    // Add this for debugging
+  console.log('App is starting on port:', process.env.PORT || 3000);
+  
+  await app.listen(process.env.PORT || 3000);
+  
+  console.log('App is running!');
   // Enable CORS
   app.enableCors({
     origin: true,
