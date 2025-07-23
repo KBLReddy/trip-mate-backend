@@ -10,8 +10,7 @@ async function bootstrap() {
 
     // Add this for debugging
   console.log('App is starting on port:', process.env.PORT || 3000);
-  
-  await app.listen(process.env.PORT || 3000);
+
   
   console.log('App is running!');
   // Enable CORS
