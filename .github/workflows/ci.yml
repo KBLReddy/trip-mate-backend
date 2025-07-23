@@ -22,6 +22,7 @@ jobs:
           --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:mysecretpassword@localhost:5432/trip_mate
+      DIRECT_URL: postgresql://postgres:mysecretpassword@localhost:5432/trip_mate
       JWT_SECRET: dummy_jwt_secret_for_ci
       JWT_REFRESH_SECRET: dummy_jwt_refresh_secret_for_ci
       JWT_EXPIRES_IN: 1h
