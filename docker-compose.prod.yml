@@ -20,19 +20,6 @@ services:
     networks:
       - tripmate-network
 
-  postgres:
-    image: postgres:15-alpine
-    container_name: tripmate_postgres_prod
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
-    networks:
-      - tripmate-network
-
 networks:
   tripmate-network:
     driver: bridge
