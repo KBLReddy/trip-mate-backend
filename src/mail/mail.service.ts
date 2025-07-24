@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
-
+interface MailInfo {
+  messageId: string;
+  accepted: string[];
+  rejected: string[];
+  response: string;
+}
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
@@ -21,7 +26,7 @@ export class MailService {
     });
 
     // Verify transporter configuration
-    this.verifyTransporter();
+    void this.verifyTransporter();
   }
 
   /**
@@ -42,7 +47,11 @@ export class MailService {
    * @param otp - 6-digit OTP code
    * @param userName - User's name for personalization
    */
-  async sendOTPEmail(email: string, otp: string, userName: string): Promise<void> {
+  async sendOTPEmail(
+    email: string,
+    otp: string,
+    userName: string,
+  ): Promise<void> {
     const mailOptions = {
       from: `"${this.configService.get<string>('MAIL_FROM_NAME', 'TripMate App')}" <${this.configService.get<string>('MAIL_FROM_EMAIL')}>`,
       to: email,
@@ -51,11 +60,15 @@ export class MailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`OTP email sent successfully to ${email}. Message ID: ${info.messageId}`);
+      const info = (await this.transporter.sendMail(mailOptions)) as MailInfo;
+      this.logger.log(
+        `OTP email sent successfully to ${email}. Message ID: ${info.messageId}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to send OTP email to ${email}:`, error);
-      throw new Error('Failed to send verification email. Please try again later.');
+      throw new Error(
+        'Failed to send verification email. Please try again later.',
+      );
     }
   }
 
@@ -73,8 +86,10 @@ export class MailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Welcome email sent successfully to ${email}. Message ID: ${info.messageId}`);
+      const info = (await this.transporter.sendMail(mailOptions)) as MailInfo;
+      this.logger.log(
+        `Welcome email sent successfully to ${email}. Message ID: ${info.messageId}`,
+      );
     } catch (error) {
       this.logger.error(`Failed to send welcome email to ${email}:`, error);
       // Don't throw error for welcome email - it's not critical
@@ -87,9 +102,13 @@ export class MailService {
    * @param resetToken - Password reset token
    * @param userName - User's name
    */
-  async sendPasswordResetEmail(email: string, resetToken: string, userName: string): Promise<void> {
+  async sendPasswordResetEmail(
+    email: string,
+    resetToken: string,
+    userName: string,
+  ): Promise<void> {
     const resetUrl = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${resetToken}`;
-    
+
     const mailOptions = {
       from: `"${this.configService.get<string>('MAIL_FROM_NAME', 'TripMate App')}" <${this.configService.get<string>('MAIL_FROM_EMAIL')}>`,
       to: email,
@@ -98,10 +117,15 @@ export class MailService {
     };
 
     try {
-      const info = await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Password reset email sent to ${email}. Message ID: ${info.messageId}`);
+      const info = (await this.transporter.sendMail(mailOptions)) as MailInfo;
+      this.logger.log(
+        `Password reset email sent to ${email}. Message ID: ${info.messageId}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send password reset email to ${email}:`, error);
+      this.logger.error(
+        `Failed to send password reset email to ${email}:`,
+        error,
+      );
       throw new Error('Failed to send password reset email.');
     }
   }

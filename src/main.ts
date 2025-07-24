@@ -10,8 +10,8 @@ async function bootstrap() {
 
   // Enable CORS with proper configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGINS 
-      ? process.env.CORS_ORIGINS.split(',') 
+    origin: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(',')
       : true,
     credentials: true,
   });
@@ -53,7 +53,7 @@ async function bootstrap() {
   }
 
   const port = process.env.PORT || 3000;
-  
+
   // Important: Use '0.0.0.0' for Railway/Docker
   await app.listen(port, '0.0.0.0');
 

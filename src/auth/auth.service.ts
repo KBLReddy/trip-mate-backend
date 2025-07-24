@@ -67,8 +67,11 @@ export class AuthService {
       await this.mailService.sendOTPEmail(email, otp, name);
     } catch (error) {
       // If email fails, delete the user
+      console.error('An error occurred:', error);
       await this.prisma.user.delete({ where: { id: user.id } });
-      throw new BadRequestException('Failed to send verification email. Please try again.');
+      throw new BadRequestException(
+        'Failed to send verification email. Please try again.',
+      );
     }
 
     // Return user info without tokens (not verified yet)
@@ -100,12 +103,16 @@ export class AuthService {
 
     // Check OTP attempts
     if (user.otpAttempts >= 5) {
-      throw new BadRequestException('Too many failed attempts. Please request a new code.');
+      throw new BadRequestException(
+        'Too many failed attempts. Please request a new code.',
+      );
     }
 
     // Check OTP expiry
     if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
-      throw new BadRequestException('Verification code expired. Please request a new one.');
+      throw new BadRequestException(
+        'Verification code expired. Please request a new one.',
+      );
     }
 
     // Verify OTP
@@ -115,10 +122,10 @@ export class AuthService {
         where: { id: userId },
         data: { otpAttempts: user.otpAttempts + 1 },
       });
-      
+
       const remainingAttempts = 5 - (user.otpAttempts + 1);
       throw new BadRequestException(
-        `Invalid verification code. ${remainingAttempts} attempts remaining.`
+        `Invalid verification code. ${remainingAttempts} attempts remaining.`,
       );
     }
 
@@ -134,7 +141,7 @@ export class AuthService {
     });
 
     // Send welcome email (don't wait for it)
-    this.mailService.sendWelcomeEmail(user.email, user.name).catch(error => {
+    this.mailService.sendWelcomeEmail(user.email, user.name).catch((error) => {
       // Log error but don't fail the request
       console.error('Failed to send welcome email:', error);
     });
@@ -178,13 +185,16 @@ export class AuthService {
 
     // Rate limiting - check last sent time
     if (user.otpLastSent) {
-      const timeSinceLastSent = Date.now() - new Date(user.otpLastSent).getTime();
+      const timeSinceLastSent =
+        Date.now() - new Date(user.otpLastSent).getTime();
       const waitTime = 60 * 1000; // 1 minute
-      
+
       if (timeSinceLastSent < waitTime) {
-        const remainingSeconds = Math.ceil((waitTime - timeSinceLastSent) / 1000);
+        const remainingSeconds = Math.ceil(
+          (waitTime - timeSinceLastSent) / 1000,
+        );
         throw new BadRequestException(
-          `Please wait ${remainingSeconds} seconds before requesting a new code`
+          `Please wait ${remainingSeconds} seconds before requesting a new code`,
         );
       }
     }
@@ -208,7 +218,10 @@ export class AuthService {
     try {
       await this.mailService.sendOTPEmail(user.email, otp, user.name);
     } catch (error) {
-      throw new BadRequestException('Failed to send verification email. Please try again.');
+      console.error('An error occurred:', error);
+      throw new BadRequestException(
+        'Failed to send verification email. Please try again.',
+      );
     }
 
     return {
@@ -235,16 +248,16 @@ export class AuthService {
       if (!user.otpExpiresAt || new Date() > user.otpExpiresAt) {
         const otp = this.generateOTP();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        
+
         await this.prisma.user.update({
           where: { id: user.id },
           data: { otp, otpExpiresAt, otpAttempts: 0 },
         });
-        
+
         // Send OTP
         await this.mailService.sendOTPEmail(email, otp, user.name);
       }
-      
+
       throw new UnauthorizedException({
         statusCode: 403,
         message: 'Email not verified',

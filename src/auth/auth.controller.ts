@@ -38,15 +38,24 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: 'Verification code sent to your email' },
-        userId: { type: 'string', example: '123e4567-e89b-12d3-a456-426614174000' },
+        message: {
+          type: 'string',
+          example: 'Verification code sent to your email',
+        },
+        userId: {
+          type: 'string',
+          example: '123e4567-e89b-12d3-a456-426614174000',
+        },
         email: { type: 'string', example: 'john.doe@example.com' },
         expiresIn: { type: 'string', example: '10 minutes' },
       },
     },
   })
   @ApiResponse({ status: 409, description: 'User already exists' })
-  @ApiResponse({ status: 400, description: 'Failed to send verification email' })
+  @ApiResponse({
+    status: 400,
+    description: 'Failed to send verification email',
+  })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
@@ -59,19 +68,24 @@ export class AuthController {
     description: 'OTP verified successfully. User is now logged in.',
     type: AuthResponseDto,
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: 'Invalid or expired OTP',
     schema: {
       type: 'object',
       properties: {
         statusCode: { type: 'number', example: 400 },
-        message: { type: 'string', example: 'Invalid verification code. 4 attempts remaining.' },
+        message: {
+          type: 'string',
+          example: 'Invalid verification code. 4 attempts remaining.',
+        },
         error: { type: 'string', example: 'Bad Request' },
       },
     },
   })
-  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto): Promise<AuthResponseDto> {
+  async verifyOtp(
+    @Body() verifyOtpDto: VerifyOtpDto,
+  ): Promise<AuthResponseDto> {
     return this.authService.verifyOTP(verifyOtpDto.userId, verifyOtpDto.otp);
   }
 
@@ -84,19 +98,25 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        message: { type: 'string', example: 'New verification code sent to your email' },
+        message: {
+          type: 'string',
+          example: 'New verification code sent to your email',
+        },
         expiresIn: { type: 'string', example: '10 minutes' },
       },
     },
   })
-  @ApiResponse({ 
-    status: 400, 
+  @ApiResponse({
+    status: 400,
     description: 'Invalid request or rate limit exceeded',
     schema: {
       type: 'object',
       properties: {
         statusCode: { type: 'number', example: 400 },
-        message: { type: 'string', example: 'Please wait 45 seconds before requesting a new code' },
+        message: {
+          type: 'string',
+          example: 'Please wait 45 seconds before requesting a new code',
+        },
         error: { type: 'string', example: 'Bad Request' },
       },
     },
@@ -114,8 +134,8 @@ export class AuthController {
     type: AuthResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  @ApiResponse({ 
-    status: 403, 
+  @ApiResponse({
+    status: 403,
     description: 'Email not verified',
     schema: {
       type: 'object',
@@ -123,7 +143,10 @@ export class AuthController {
         statusCode: { type: 'number', example: 403 },
         message: { type: 'string', example: 'Email not verified' },
         error: { type: 'string', example: 'EMAIL_NOT_VERIFIED' },
-        userId: { type: 'string', example: '123e4567-e89b-12d3-a456-426614174000' },
+        userId: {
+          type: 'string',
+          example: '123e4567-e89b-12d3-a456-426614174000',
+        },
       },
     },
   })

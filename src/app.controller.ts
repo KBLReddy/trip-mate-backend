@@ -7,7 +7,10 @@ import { MailService } from './mail/mail.service';
 @ApiTags('health')
 @Controller()
 export class AppController {
-  constructor(private readonly prisma: PrismaService,private mailService: MailService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private mailService: MailService,
+  ) {}
   @Get('info')
   @ApiOperation({ summary: 'API root endpoint' })
   @ApiResponse({ status: 200, description: 'API information' })
