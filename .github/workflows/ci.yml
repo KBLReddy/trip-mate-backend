@@ -11,7 +11,6 @@ permissions:
   pull-requests: write
   checks: write
 
-
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -84,8 +83,9 @@ jobs:
       - name: Lint code
         run: npm run lint
 
+      # UPDATED: Add coverage reporters
       - name: Run unit & integration tests with coverage
-        run: npm run test:cov
+        run: npm run test:cov -- --coverageReporters=json-summary --coverageReporters=text --coverageReporters=lcov
 
       - name: Run e2e tests
         run: npm run test:e2e
@@ -143,10 +143,4 @@ jobs:
           name: trip-mate-coverage
           fail_ci_if_error: false
 
-      # Optional: Add coverage comment to PR
-      - name: Jest Coverage Comment
-        uses: ArtiomTr/jest-coverage-report-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          coverage-file: ./coverage/coverage-final.json
+      # REMOVED: The problematic Jest Coverage Comment action
