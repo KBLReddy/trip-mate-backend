@@ -32,6 +32,35 @@ export class UsersService {
         email,
         passwordHash: hashedPassword,
         name,
+        isVerified: true, // Keep existing users verified by default
+      },
+    });
+  }
+
+  /**
+   * Create an unverified user with OTP (for registration flow)
+   */
+  async createUnverified(data: {
+    email: string;
+    password: string;
+    name: string;
+    otp: string;
+    otpExpiresAt: Date;
+  }): Promise<User> {
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // Create unverified user with OTP
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        passwordHash: hashedPassword,
+        name: data.name,
+        isVerified: false, // Not verified yet
+        otp: data.otp,
+        otpExpiresAt: data.otpExpiresAt,
+        otpAttempts: 0,
+        otpLastSent: new Date(),
       },
     });
   }

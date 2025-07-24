@@ -49,25 +49,28 @@ Welcome to the Trip-Mate backend repository! This project provides a robust, sca
 
 ## ✨ Core Features
 
--   **Secure User Management**: JWT-based authentication for user registration and login.
--   **Collaborative Trip Planning**: Create trips and invite friends to plan together.
--   **Itinerary Management**: Add and organize destinations within a trip.
--   **Activity Scheduling**: Plan activities for each destination with dates and details.
--   **Shared Expense Tracking**: Log expenses, categorize them, and manage the trip budget transparently.
--   **Data Validation**: Robust request validation using `class-validator` to ensure data integrity.
--   **Scalable Architecture**: Modular design powered by NestJS for easy maintenance and extension.
+-   **🔒 Secure Authentication**: JWT-based authentication with email verification via OTP
+-   **✉️ Email Verification**: 6-digit OTP sent to email for secure user registration
+-   **👥 User Management**: Complete user profile management with role-based access
+-   **🗺️ Tour Management**: Browse, create, and manage tours with detailed itineraries
+-   **📅 Booking System**: Book tours with status tracking and payment management
+-   **💬 Community Features**: Share experiences through posts and comments
+-   **🔔 Real-time Notifications**: Stay updated with booking confirmations and updates
+-   **💰 Expense Tracking**: Track and split expenses transparently
+-   **📱 Mobile-Ready API**: RESTful API design optimized for mobile applications
 
 ---
 
 ## 🛠️ Tech Stack
 
--   **Framework**: [NestJS](https://nestjs.com/) - A progressive Node.js framework for building efficient and scalable server-side applications.
--   **Language**: [TypeScript](https://www.typescriptlang.org/) - Typed superset of JavaScript that compiles to plain JavaScript.
--   **ORM**: [Prisma](https://www.prisma.io/) - Next-generation Node.js and TypeScript ORM for type-safe database access.
--   **Database**: [PostgreSQL](https://www.postgresql.org/) - A powerful, open-source object-relational database system.
--   **Authentication**: [Passport.js](http://www.passportjs.org/) with JWT Strategy for secure, stateless authentication.
--   **Validation**: [class-validator](https://github.com/typestack/class-validator) & [class-transformer](https://github.com/typestack/class-transformer) for validating incoming request bodies.
-
+-   **Framework**: [NestJS](https://nestjs.com/) - Progressive Node.js framework
+-   **Language**: [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
+-   **ORM**: [Prisma](https://www.prisma.io/) - Next-generation TypeScript ORM
+-   **Database**: [PostgreSQL](https://www.postgresql.org/) - Powerful open-source database
+-   **Authentication**: [Passport.js](http://www.passportjs.org/) with JWT Strategy
+-   **Email Service**: [Nodemailer](https://nodemailer.com/) with Brevo SMTP
+-   **Validation**: [class-validator](https://github.com/typestack/class-validator)
+-   **API Documentation**: [Swagger/OpenAPI](https://swagger.io/)
 ---
 
 ## 📁 Project Structure
@@ -87,6 +90,10 @@ The project follows a standard modular architecture. Understanding the structure
 │   │   ├── auth.controller.ts # Defines the `/auth` API routes.
 │   │   ├── auth.service.ts   # Contains the business logic for authentication.
 │   │   └── jwt.strategy.ts # Implements the logic to validate JWTs.
+|   |
+|   ├── mail/
+|   |   ├── mail.service.ts # Email sending logic
+|   |   └── mail.module.ts # Mail module configuration
 │   │
 │   ├── users/              # Manages user-related operations (e.g., fetching profiles).
 │   │   ├── users.controller.ts # Defines the `/users` API routes.
@@ -116,12 +123,11 @@ Follow these steps to get a local copy of the project up and running.
 
 ### Prerequisites
 
--   [Node.js](https://nodejs.org/en/) (v16 or newer)
+-   [Node.js](https://nodejs.org/en/) (v20 or newer)
 -   [npm](https://www.npmjs.com/) or [Yarn](https://yarnpkg.com/)
--   [Git](https://git-scm.com/)
--   [PostgreSQL](https://www.postgresql.org/download/) server running locally.
-    -   *Alternative*: [Docker](https://www.docker.com/products/docker-desktop/) for a containerized database setup.
-
+-   [PostgreSQL](https://www.postgresql.org/) (v15 or newer)
+-   [Docker](https://www.docker.com/) (optional, for containerized setup)
+-   [Brevo Account](https://www.brevo.com/) (for email service)
 ### Installation & Setup
 
 1.  **Clone the Repository**
@@ -135,22 +141,38 @@ Follow these steps to get a local copy of the project up and running.
     npm install
     ```
 
-3.  **Configure Environment Variables**
-    Create a `.env` file in the root directory by copying the example file.
+3.  **Set Up Environment Variables**
     ```bash
     cp .env.example .env
     ```
-    Open the `.env` file and set the following variables:
+    
+    Edit `.env` with your configuration:
     ```env
-    # --- Database Configuration ---
-    # Your PostgreSQL connection string.
-    # Format: postgresql://USER:PASSWORD@HOST:PORT/DATABASE_NAME
-    DATABASE_URL="postgresql://postgres:mysecretpassword@localhost:5432/trip_mate"
+    # Application
+    NODE_ENV=development
+    PORT=3000
 
-    # --- Security Configuration ---
-    # A strong, unique secret for signing JSON Web Tokens (JWTs).
-    # You can generate one here: https://www.lastpass.com/features/password-generator
-    JWT_SECRET="YOUR_SUPER_SECRET_AND_LONG_JWT_KEY"
+    # Database
+    DATABASE_URL="postgresql://postgres:password@localhost:5432/tripmate?schema=public"
+    DIRECT_URL="postgresql://postgres:password@localhost:5432/tripmate?schema=public"
+
+    # JWT Secrets (generate strong secrets for production)
+    JWT_SECRET="your-super-secret-jwt-key"
+    JWT_REFRESH_SECRET="your-super-secret-refresh-key"
+    JWT_EXPIRES_IN="15m"
+    JWT_REFRESH_EXPIRES_IN="7d"
+
+    # Email Configuration (Brevo)
+    MAIL_HOST=smtp-relay.brevo.com
+    MAIL_PORT=587
+    MAIL_USER=your-email@gmail.com
+    MAIL_PASS=xkeysib-your-brevo-smtp-key
+    MAIL_FROM_NAME=TripMate
+    MAIL_FROM_EMAIL=noreply@tripmate.com
+
+    # Frontend URL (for CORS)
+    FRONTEND_URL=http://localhost:3000
+    CORS_ORIGINS="http://localhost:3000,http://localhost:3001"
     ```
     > **Important**: Ensure you have a PostgreSQL database created that matches the `DATABASE_NAME` in your `DATABASE_URL`.
 
@@ -178,20 +200,39 @@ Follow these steps to get a local copy of the project up and running.
     ```
 
 ---
-
 ## 🔐 API Authentication Flow
 
-The API is secured using JSON Web Tokens (JWT). All protected endpoints require a valid token.
+The API uses JWT-based authentication with email verification:
 
-1.  **Register or Login**: A new user signs up via `/auth/register` or an existing user signs in via `/auth/login`.
-2.  **Receive Token**: Upon successful authentication, the API returns an `access_token`.
-3.  **Authorize Requests**: For every subsequent request to a protected endpoint, you must include the `Authorization` header.
+### Registration Flow
 
-**Header Format**:
+1. **User registers** with email, password, and name
+2. **System sends OTP** (6-digit code) to user's email
+3. **User verifies OTP** within 10 minutes
+4. **System returns JWT tokens** (access & refresh tokens)
+
+### Authentication Headers
+
+For protected endpoints, include the access token:
 ```
-Authorization: Bearer <your_access_token>
+Authorization: Bearer <access_token>
 ```
-Endpoints that require this header are marked with a 🔒 emoji in the documentation below.
+
+
+### Email Verification Process
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant Email Service
+    
+    User->>API: POST /auth/register
+    API->>Email Service: Send OTP
+    Email Service->>User: Email with 6-digit OTP
+    User->>API: POST /auth/verify-otp
+    API->>User: JWT tokens + User data
+```
 
 ---
 
@@ -212,35 +253,72 @@ Endpoints that require this header are marked with a 🔒 emoji in the documenta
 
 ### **Auth Module (`/auth`)**
 
-Handles user registration and authentication.
-
-#### 1. Register a New User
+#### 1. Register New User
 -   **Endpoint**: `POST /auth/register`
--   **Description**: Creates a new user account. The email must be unique.
+-   **Description**: Register a new user and send OTP to email
 -   **Authentication**: 🔓 Public
--   **Request Body**: `application/json`
+-   **Request Body**:
     ```json
     {
-      "email": "jane.doe@example.com",
-      "password": "a-very-strong-password-123!",
-      "name": "Jane Doe"
+      "email": "user@example.com",
+      "password": "StrongPassword123!",
+      "name": "John Doe"
     }
     ```
-    *   `email` (string, required, valid email format)
-    *   `password` (string, required, min 8 characters)
-    *   `name` (string, required)
-
--   **Success Response (201 Created)**:
+-   **Success Response (201)**:
     ```json
     {
-        "id": "clxza1b2c3d4e5f6",
-        "email": "jane.doe@example.com",
-        "name": "Jane Doe"
+      "message": "Verification code sent to your email",
+      "userId": "123e4567-e89b-12d3-a456-426614174000",
+      "email": "user@example.com",
+      "expiresIn": "10 minutes"
     }
     ```
--   **Error Response (400 Bad Request)**: If validation fails or email is already taken.
 
-#### 2. Login
+#### 2. Verify OTP
+-   **Endpoint**: `POST /auth/verify-otp`
+-   **Description**: Verify email with OTP and get tokens
+-   **Authentication**: 🔓 Public
+-   **Request Body**:
+    ```json
+    {
+      "userId": "123e4567-e89b-12d3-a456-426614174000",
+      "otp": "123456"
+    }
+    ```
+-   **Success Response (200)**:
+    ```json
+    {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "123e4567-e89b-12d3-a456-426614174000",
+        "email": "user@example.com",
+        "name": "John Doe",
+        "role": "USER"
+      }
+    }
+    ```
+
+#### 3. Resend OTP
+-   **Endpoint**: `POST /auth/resend-otp`
+-   **Description**: Resend OTP to user's email (rate limited to 1 per minute)
+-   **Authentication**: 🔓 Public
+-   **Request Body**:
+    ```json
+    {
+      "userId": "123e4567-e89b-12d3-a456-426614174000"
+    }
+    ```
+-   **Success Response (200)**:
+    ```json
+    {
+      "message": "New verification code sent to your email",
+      "expiresIn": "10 minutes"
+    }
+    ```
+
+#### 4. Login
 -   **Endpoint**: `POST /auth/login`
 -   **Description**: Authenticates a user with their email and password.
 -   **Authentication**: 🔓 Public
@@ -266,7 +344,7 @@ Handles user registration and authentication.
     ```
 -   **Error Response (401 Unauthorized)**: If credentials are invalid.
 
-#### 3. Refresh Access Token
+#### 5. Refresh Access Token
 -   **Endpoint**: `POST /auth/refresh`
 -   **Description**: Refreshes the access token using a valid refresh token.
 -   **Authentication**: 🔒 Requires valid refresh token in `Authorization` header.
@@ -295,7 +373,7 @@ Handles user registration and authentication.
     ```
 -   **Error Response (403 Forbidden)**: If the refresh token is invalid or expired.
 
-#### 4. Logout
+#### 6. Logout
 -   **Endpoint**: `POST /auth/logout`
 -   **Description**: Logs out the user and invalidates the refresh token.
 -   **Authentication**: 🔒 Requires valid access token in `Authorization` header.
@@ -1673,6 +1751,17 @@ If you have a suggestion that would make this better, please fork the repo and c
 4.  Push to the Branch (`git push origin feature/AmazingFeature`)
 5.  Open a Pull Request
 
+---
+## 🔒 Security Features
+
+- **Email Verification**: OTP-based email verification for new users
+- **Password Hashing**: Bcrypt with salt rounds
+- **Rate Limiting**: OTP resend limited to 1 per minute
+- **JWT Security**: Short-lived access tokens with refresh token rotation
+- **Input Validation**: Comprehensive request validation
+- **SQL Injection Protection**: Parameterized queries via Prisma
+- **CORS Protection**: Configurable allowed origins
+- **Environment Variables**: Sensitive data kept in env files
 ---
 
 ## 📜 License

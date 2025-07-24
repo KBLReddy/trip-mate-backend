@@ -2,12 +2,15 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PrismaService } from './prisma/prisma.service';
+import { MailService } from './mail/mail.service';
 
 @ApiTags('health')
 @Controller()
 export class AppController {
-  constructor(private readonly prisma: PrismaService) {}
-
+  constructor(
+    private readonly prisma: PrismaService,
+    private mailService: MailService,
+  ) {}
   @Get('info')
   @ApiOperation({ summary: 'API root endpoint' })
   @ApiResponse({ status: 200, description: 'API information' })

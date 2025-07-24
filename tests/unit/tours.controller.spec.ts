@@ -26,6 +26,11 @@ describe('ToursController', () => {
     passwordHash: 'hash',
     avatar: null,
     role: Role.ADMIN,
+    isVerified: false,
+    otp: null,
+    otpExpiresAt: null,
+    otpAttempts: 0,
+    otpLastSent: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
