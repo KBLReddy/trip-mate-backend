@@ -93,6 +93,38 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Create Coverage Comment
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            try {
+              const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+              const total = coverage.total;
+              
+              const comment = `## 📊 Coverage Report
+              
+              | Type | Coverage | Details |
+              |------|----------|---------|
+              | Lines | ${total.lines.pct}% | ${total.lines.covered}/${total.lines.total} |
+              | Statements | ${total.statements.pct}% | ${total.statements.covered}/${total.statements.total} |
+              | Functions | ${total.functions.pct}% | ${total.functions.covered}/${total.functions.total} |
+              | Branches | ${total.branches.pct}% | ${total.branches.covered}/${total.branches.total} |
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.error('Failed to create coverage comment:', error);
+            }
+
       # Upload coverage report as artifact
       - name: Upload coverage report
         if: always()
