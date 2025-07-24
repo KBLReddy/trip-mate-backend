@@ -22,6 +22,11 @@ model User {
   name          String
   avatar        String?
   role          Role           @default(USER)
+  isVerified    Boolean        @default(false)  
+  otp           String?                       
+  otpExpiresAt  DateTime?                     
+  otpAttempts   Int           @default(0)      
+  otpLastSent   DateTime?                    
   refreshTokens RefreshToken[]
   tours         Tour[]         @relation("TourGuide")
   bookings      Booking[]

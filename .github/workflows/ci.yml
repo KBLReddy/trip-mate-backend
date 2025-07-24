@@ -21,12 +21,29 @@ jobs:
         options: >-
           --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
     env:
+      # Database
       DATABASE_URL: postgresql://postgres:mysecretpassword@localhost:5432/trip_mate
       DIRECT_URL: postgresql://postgres:mysecretpassword@localhost:5432/trip_mate
+      
+      # JWT Configuration
       JWT_SECRET: dummy_jwt_secret_for_ci
       JWT_REFRESH_SECRET: dummy_jwt_refresh_secret_for_ci
       JWT_EXPIRES_IN: 1h
       JWT_REFRESH_EXPIRES_IN: 7d
+      
+      # Email Configuration (for CI/testing)
+      MAIL_HOST: smtp.ethereal.email  # Using Ethereal for testing
+      MAIL_PORT: 587
+      MAIL_USER: dummy@ethereal.email
+      MAIL_PASS: dummy_password
+      MAIL_FROM_NAME: Trip Mate Test
+      MAIL_FROM_EMAIL: noreply@tripmate.test
+      
+      # Application
+      NODE_ENV: test
+      PORT: 3000
+      FRONTEND_URL: http://localhost:3000
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

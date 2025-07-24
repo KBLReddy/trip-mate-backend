@@ -8,14 +8,11 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-    // Add this for debugging
-  console.log('App is starting on port:', process.env.PORT || 3000);
-
-  
-  console.log('App is running!');
-  // Enable CORS
+  // Enable CORS with proper configuration
   app.enableCors({
-    origin: true,
+    origin: process.env.CORS_ORIGINS 
+      ? process.env.CORS_ORIGINS.split(',') 
+      : true,
     credentials: true,
   });
 
@@ -34,44 +31,36 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // Swagger configuration
-  const config = new DocumentBuilder()
-    .setTitle('TripMate API')
-    .setDescription('Tour booking platform with community features')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .addTag('health', 'Health check endpoints')
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('users', 'User management endpoints')
-    .addTag('tours', 'Tour management endpoints')
-    .addTag('bookings', 'Booking management endpoints')
-    .addTag('posts', 'Community posts endpoints')
-    .addTag('comments', 'Comments endpoints')
-    .addTag('notifications', 'Notifications endpoints')
-    .build();
+  // Swagger configuration - only in non-production
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('TripMate API')
+      .setDescription('Tour booking platform with community features')
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .addTag('health', 'Health check endpoints')
+      .addTag('auth', 'Authentication endpoints')
+      .addTag('users', 'User management endpoints')
+      .addTag('tours', 'Tour management endpoints')
+      .addTag('bookings', 'Booking management endpoints')
+      .addTag('posts', 'Community posts endpoints')
+      .addTag('comments', 'Comments endpoints')
+      .addTag('notifications', 'Notifications endpoints')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'TripMate API Documentation',
-    customfavIcon: 'https://nestjs.com/img/logo_text.svg',
-    customJs: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js',
-    ],
-    customCssUrl: [
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.css',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.css',
-    ],
-  });
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  
+  // Important: Use '0.0.0.0' for Railway/Docker
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(
-    `📚 Swagger docs available at: http://localhost:${port}/api/docs`,
-  );
-  console.log(`🏥 Health check available at: http://localhost:${port}/health`);
+  console.log(`🚀 Application is running on port: ${port}`);
+  console.log(`🏥 Health check available at: /health`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`📚 Swagger docs available at: /api/docs`);
+  }
 }
 void bootstrap();

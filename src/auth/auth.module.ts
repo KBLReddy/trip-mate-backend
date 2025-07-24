@@ -7,11 +7,13 @@ import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    MailModule,
     JwtModule.register({}), // We'll configure this in the service
   ],
   controllers: [AuthController],

@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { MailModule } from './mail/mail.module';
 import { ToursModule } from './tours/tours.module';
 import { BookingsModule } from './bookings/bookings.module';
 import { PostsModule } from './posts/posts.module';
@@ -21,6 +22,7 @@ import { AppController } from './app.controller';
     PrismaModule,
     AuthModule,
     UsersModule,
+    MailModule,
     ToursModule,
     BookingsModule,
     PostsModule,

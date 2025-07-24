@@ -8,6 +8,9 @@ module.exports = {
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/tests/setup/global-setup.ts'],
   globalTeardown: '<rootDir>/tests/setup/global-teardown.ts',
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+  },
   coverageThreshold: {
     global: {
       branches: 70,

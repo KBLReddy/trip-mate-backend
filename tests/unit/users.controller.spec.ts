@@ -16,6 +16,11 @@ describe('UsersController', () => {
     passwordHash: 'hash',
     avatar: null,
     role: Role.USER,
+    isVerified: false,
+    otp: null,
+    otpExpiresAt: null,
+    otpAttempts: 0,
+    otpLastSent: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
